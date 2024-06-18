@@ -139,7 +139,7 @@ body {
     border-color: #1e7e34;
 }
 
-.clickable>input, .clickable>label {
+.clickable:not(div), .clickable>input, .clickable>label {
     user-select: none;
     cursor: pointer;
 }
