@@ -1,0 +1,30 @@
+{
+    "manifest_version": 2,
+    "name": "themes.moe Download Button",
+    "version": "0.0.1",
+
+    "description": "Adds a Download button to every themes.moe list and downloads them either as video or audio (mp3/ogg)",
+
+    "icons" : {
+        "48": "icon/download.png"
+    },
+
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "themes.moe_download@shootergamer234"
+        }
+    },
+
+    "content_scripts": [
+        {
+            "matches": ["*://*.themes.moe/list/*"],
+            "js": ["script/ui_builder.js"],
+            "css": ["css/popup.css"]
+        }
+    ],
+
+    "web_accessible_resources": [
+        "script/dl_popup.js",
+        "script/downloader.js"
+    ]
+}
