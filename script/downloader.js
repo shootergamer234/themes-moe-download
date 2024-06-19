@@ -1,5 +1,5 @@
 //TODO: download of whole list
 
-export function test234() {
-    console.log("test234 working");
+export function startDownload(dl_opt) {
+    console.log(dl_opt);
 }

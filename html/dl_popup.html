@@ -9,12 +9,12 @@
                 <div class="row-box">
                     <div class="row-elem">
                         <div class="clickable">
-                            <input id="rdio-audio" class="no-margin" name="format" type="radio" value="" checked="checked"/><label for="rdio-audio" class="ltr-label">Audio (mp3/ogg)</label>
+                            <input id="rdio-audio" class="no-margin" name="mode" type="radio" value="" checked="checked"/><label for="rdio-audio" class="ltr-label">Audio (mp3/ogg)</label>
                         </div>
                     </div>
                     <div class="row-elem">
                         <div class="clickable">
-                            <input id="rdio-video" class="no-margin" name="format" type="radio"/><label for="rdio-video" class="ltr-label">Video (mp4 only)</label>
+                            <input id="rdio-video" class="no-margin" name="mode" type="radio"/><label for="rdio-video" class="ltr-label">Video (mp4 only)</label>
                         </div>
                     </div>
                 </div>
@@ -47,7 +47,7 @@
             document.getElementById("popup-container").remove();
     }
     function onClickDownloadBtn(event) {
-        console.log("download started");
+        console.log("download start in download.js");
         closePopup(event);
     }
     function applyVideoMode() {

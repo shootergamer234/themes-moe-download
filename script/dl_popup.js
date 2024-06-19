@@ -36,9 +36,20 @@ function closePopup(event) {
         document.getElementById("popup-container").remove();
 }
 function onClickDownloadBtn(event) {
+    let download_opt = {};
+    download_opt.mode = document.getElementById("rdio-audio").checked ? "audio" : document.getElementById("rdio-video").checked ? "video" : "";
+    download_opt.embed_metadata = document.getElementById("chk-metadata").checked;
+    download_opt.metadata_type = download_opt.embed_metadata ? document.getElementById("sel-metadata-type").value : "";
+    download_opt.file_ext = document.getElementById("sel-ext").value;
+    
+    let popup_window = document.getElementById("popup-window");
+    let input_elems = Array.from(popup_window.getElementsByTagName("input")).concat(Array.from(popup_window.getElementsByTagName("select")));
+    input_elems.forEach( input_elem => fullDisableElem(input_elem));
+
     import(getInternalURL("../script/downloader.js")).then((module) => { 
+        module.startDownload(download_opt);
     });
-    closePopup(event);
+    //closePopup(event); //TODO: add loading wheel
 }
 function applyVideoMode() {
     fullDisableElem(document.getElementById("chk-metadata"));
@@ -76,17 +87,46 @@ function updateSelMetadataType() {
     else
         fullDisableElem(sel_metadata_type);
 }
+/**
+ * Disables a HTMLElement and removes the clickable class of itself or its parrent Element
+ * @param HTMLElement to fully disable
+ */
 function fullDisableElem(elem) {
     elem.disabled = true;
     if (elem.tagName.toLowerCase() == "select")
-        elem.className = elem.className.replace("clickable", "").trim().replace(new RegExp("\s{2,}", "gi"), " ");
+        removeClass(elem, "clickable");
+        //elem.className = elem.className.replace("clickable", "").trim().replace(new RegExp("\s{2,}", "gi"), " ");
     else
-        elem.parentElement.className = elem.parentElement.className.replace("clickable", "").trim().replace(new RegExp("\s{2,}", "gi"), " ");
+        removeClass(elem.parentElement, "clickable");
+        //elem.parentElement.className = elem.parentElement.className.replace("clickable", "").trim().replace(new RegExp("\s{2,}", "gi"), " ");
 }
+/**
+ * Enables a HTMLElement and appends the clickable class to itself or its parrent Element
+ * @param HTMLElement to fully enable
+ */
 function fullEnableElem(elem) {
     elem.disabled = false;
     if (elem.tagName.toLowerCase() == "select")
-        elem.className = elem.className.concat(" ", "clickable").trim();
+        appendClass(elem, "clickable");
+        //elem.className = elem.className.concat(" ", "clickable").trim();
     else
-        elem.parentElement.className = elem.parentElement.className.concat(" ", "clickable").trim();
+        appendClass(elem.parentElement, "clickable");
+        //elem.parentElement.className = elem.parentElement.className.concat(" ", "clickable").trim();
+}
+/**
+ * Removes one className from the classNames of the given HTMLElement
+ * @param HTMLElement from which to remove the class
+ * @param String of the className to be removed
+ */
+function removeClass(elem, className) {
+    elem.className = elem.className.replace(className, "").trim().replace("  ", " ");
+    //elem.className = elem.className.replace(className, "").trim().replace(new RegExp("\s{2,}", "g"), " "); //regex not required
+}
+/**
+ * Appends one className from the classNames of the given HTMLElement
+ * @param HTMLElement to which to append the class
+ * @param String of the className to be appended
+ */
+function appendClass(elem, className) {
+    elem.className = elem.className.concat(" ", className).trimStart();
 }
