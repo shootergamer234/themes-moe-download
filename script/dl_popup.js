@@ -89,7 +89,7 @@ function updateSelMetadataType() {
 }
 /**
  * Disables a HTMLElement and removes the clickable class of itself or its parrent Element
- * @param HTMLElement to fully disable
+ * @param {HTMLElement} elem - HTMLElement to fully disable
  */
 function fullDisableElem(elem) {
     elem.disabled = true;
@@ -100,7 +100,7 @@ function fullDisableElem(elem) {
 }
 /**
  * Enables a HTMLElement and appends the clickable class to itself or its parrent Element
- * @param HTMLElement to fully enable
+ * @param {HTMLElement} elem - HTMLElement to fully enable
  */
 function fullEnableElem(elem) {
     elem.disabled = false;
@@ -111,16 +111,16 @@ function fullEnableElem(elem) {
 }
 /**
  * Removes one className from the classNames of the given HTMLElement
- * @param HTMLElement from which to remove the class
- * @param String of the className to be removed
+ * @param {HTMLElement} elem - HTMLElement from which to remove the class
+ * @param {string} className - className to be removed
  */
 function removeClass(elem, className) {
     elem.className = elem.className.replace(className, "").trim().replace("  ", " ");
 }
 /**
  * Appends one className from the classNames of the given HTMLElement
- * @param HTMLElement to which to append the class
- * @param String of the className to be appended
+ * @param {HTMLElement} elem - HTMLElement to which to append the class
+ * @param {string} className - className to be appended
  */
 function appendClass(elem, className) {
     elem.className = elem.className.concat(" ", className).trimStart();
