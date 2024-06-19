@@ -49,7 +49,7 @@ function onClickDownloadBtn(event) {
     import(getInternalURL("../script/downloader.js")).then((module) => { 
         module.startDownload(download_opt);
     });
-    //closePopup(event); //TODO: add loading wheel
+    //TODO: add loading wheel
 }
 function applyVideoMode() {
     fullDisableElem(document.getElementById("chk-metadata"));
@@ -95,10 +95,8 @@ function fullDisableElem(elem) {
     elem.disabled = true;
     if (elem.tagName.toLowerCase() == "select")
         removeClass(elem, "clickable");
-        //elem.className = elem.className.replace("clickable", "").trim().replace(new RegExp("\s{2,}", "gi"), " ");
     else
         removeClass(elem.parentElement, "clickable");
-        //elem.parentElement.className = elem.parentElement.className.replace("clickable", "").trim().replace(new RegExp("\s{2,}", "gi"), " ");
 }
 /**
  * Enables a HTMLElement and appends the clickable class to itself or its parrent Element
@@ -108,10 +106,8 @@ function fullEnableElem(elem) {
     elem.disabled = false;
     if (elem.tagName.toLowerCase() == "select")
         appendClass(elem, "clickable");
-        //elem.className = elem.className.concat(" ", "clickable").trim();
     else
         appendClass(elem.parentElement, "clickable");
-        //elem.parentElement.className = elem.parentElement.className.concat(" ", "clickable").trim();
 }
 /**
  * Removes one className from the classNames of the given HTMLElement
@@ -120,7 +116,6 @@ function fullEnableElem(elem) {
  */
 function removeClass(elem, className) {
     elem.className = elem.className.replace(className, "").trim().replace("  ", " ");
-    //elem.className = elem.className.replace(className, "").trim().replace(new RegExp("\s{2,}", "g"), " "); //regex not required
 }
 /**
  * Appends one className from the classNames of the given HTMLElement
