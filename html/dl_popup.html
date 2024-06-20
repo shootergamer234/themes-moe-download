@@ -15,7 +15,7 @@
                     </div>
                     <div class="row-elem">
                         <div class="clickable">
-                            <input id="rdio-video" class="no-margin" name="mode" type="radio"/><label for="rdio-video" class="ltr-label">Video (mp4 only)</label>
+                            <input id="rdio-video" class="no-margin" name="mode" type="radio"/><label for="rdio-video" class="ltr-label">Video (webm only)</label>
                         </div>
                     </div>
                 </div>
@@ -30,8 +30,6 @@
                 </div>
                 <div class="row-box">
                     <select id="sel-ext" name="ext" class="clickable">
-                        <option value="mp3">mp3</option>
-                        <option value="ogg">ogg</option>
                     </select>
                 </div>
                 </form>
@@ -59,10 +57,10 @@
         fullDisableElem(sel_ext);
         while (sel_ext.firstChild)
             sel_ext.removeChild(sel_ext.firstChild);
-        let opt_mp4 = document.createElement("option");
-        opt_mp4.value = "mp4";
-        opt_mp4.text = "mp4"
-        sel_ext.append(opt_mp4);
+        let opt_webm = document.createElement("option");
+        opt_webm.value = "webm";
+        opt_webm.text = "webm"
+        sel_ext.append(opt_webm);
     }
     function applyAudioMode() {
         fullEnableElem(document.getElementById("chk-metadata"));

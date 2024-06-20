@@ -6,22 +6,26 @@ export function startDownload(dl_opt) {
     let table_anime = document.getElementsByTagName("app-anime-list-table").item(0).firstElementChild;
     if (!table_anime)
         table_anime = document.getElementsByTagName("table").item(0);
-    let links = Array.from(table_anime.getElementsByTagName("a")).filter((a) => a.href.endsWith(".webm"))
-    links.forEach((a, idx, arr) => arr[idx] = a.href);
+    let links = Array.from(table_anime.getElementsByTagName("a")).filter((a) => a.href.endsWith(".webm"));
+    links.forEach((a, index, arr) => arr[index] = a.href);
     
-    if (dl_opt.file_ext == "mp4") 
-        downloadMP4s(links);
-    else if (dl_opt.file_ext == "mp3")
+    if (dl_opt.file_ext == "webm") 
+        downloadWEBMs(links);
+    else if (dl_opt.file_ext == "mp3") {
+        links.forEach((webm_link, index, arr) => arr[index] = getMP3Address(webm_link));
         downloadMP3s(links, dl_opt.embed_metadata, dl_opt.metadata_type);
-    else if (dl_opt.file_ext == "ogg")
+    }
+    else if (dl_opt.file_ext == "ogg") {
+        links.forEach((webm_link, index, arr) => arr[index] = getOGGAddress(webm_link));
         downloadOGGs(links, dl_opt.embed_metadata, dl_opt.metadata_type);
+    }
 }
 
 /**
- * Downloads videos in mp4 format.
+ * Downloads videos in webm format.
  * @param {Array} links - Links to download.
  */
-function downloadMP4s(links) {
+function downloadWEBMs(links) {
     
 }
 /**

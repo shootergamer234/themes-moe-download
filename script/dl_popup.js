@@ -1,16 +1,16 @@
 export function attachToPopup() {
     updateSelMetadataType();
-    if (document.getElementById("rdio-video").checked)
+    let rdio_audio = document.getElementById("rdio-audio");
+    let rdio_video = document.getElementById("rdio-video");
+    if (rdio_audio.checked)
         applyAudioMode();
-    if (document.getElementById("rdio-video").checked)
+    else if (rdio_video.checked)
         applyVideoMode();
     
     document.getElementById("popup-flexbox").addEventListener("click", event => closePopup(event));
     document.getElementById("cancel-btn").addEventListener("click", event => closePopup(event));
     document.getElementById("apply-btn").addEventListener("click", event => onClickDownloadBtn(event));
-
-    let rdio_audio = document.getElementById("rdio-audio");
-    let rdio_video = document.getElementById("rdio-video");
+    
     let chk_metadata = document.getElementById("chk-metadata");
     rdio_audio.addEventListener("change", () => applyAudioMode());
     rdio_video.addEventListener("change", () => applyVideoMode());
@@ -58,10 +58,10 @@ function applyVideoMode() {
     fullDisableElem(sel_ext);
     while (sel_ext.firstChild)
         sel_ext.removeChild(sel_ext.firstChild);
-    let opt_mp4 = document.createElement("option");
-    opt_mp4.value = "mp4";
-    opt_mp4.text = "mp4"
-    sel_ext.append(opt_mp4);
+    let opt_webm = document.createElement("option");
+    opt_webm.value = "webm";
+    opt_webm.text = "webm"
+    sel_ext.append(opt_webm);
 }
 function applyAudioMode() {
     fullEnableElem(document.getElementById("chk-metadata"));
