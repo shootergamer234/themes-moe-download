@@ -1,4 +1,4 @@
-var getInternalURL = (url) => browser.runtime.getURL(url);
+var getInternalURL = (url) => chrome.runtime.getURL(url);
 
 var popup_container;
 var list_controls;
