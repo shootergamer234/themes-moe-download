@@ -1,8 +1,6 @@
 //TODO: download of whole list
 
 export function startDownload(dl_opt) {
-    console.log(dl_opt);
-
     let table_anime = document.getElementsByTagName("app-anime-list-table").item(0).firstElementChild;
     if (!table_anime)
         table_anime = document.getElementsByTagName("table").item(0);
@@ -41,7 +39,7 @@ function downloadMP3s(links, embed_metadata, metadata_type) {
  * Downloads music in ogg format with or without metadata.
  * @param {Array} links - Links to download.
  * @param {boolean} embed_metadata - Whether or not to embed metadata.
- * @param {string} metadata_type - Type of metadata embedding. Is ignored if embed_metadata is false
+ * @param {string} metadata_type - Type of metadata embedding. Is ignored if embed_metadata is false.
  */
 function downloadOGGs(links, embed_metadata, metadata_type) {
 
