@@ -1,12 +1,49 @@
 var getInternalURL = (url) => browser.runtime.getURL(url);
 
 var popup_container;
-
+var list_controls;
 
 document.body.style.border = "5px solid red"; //TODO: remove DEBUG indicator
 
+/**
+ * Clones all attributes from one Node to another.
+ * @param {Node} source - Node from which to copy all attributes.
+ * @param {Node} target - Node that receives the same attributes.
+ */
 var cloneAttributes = (source, target) => 
     Array.from(source.attributes).forEach(attr => target.setAttribute(attr.nodeName, attr.nodeValue));
+/**
+ * Allows waiting for a Element to appear in DOM.
+ * @param {string} selector - The CSS selector matching the searched Element.
+ * @returns {Element} First element found matching the selector.
+ */
+function waitForElem(selector) {
+    return new Promise(resolve => {
+        let elem = document.querySelector(selector);
+        if (elem)
+            return resolve(elem);
+
+        const observer = new MutationObserver((mutations, obsv) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    let queryNode;
+                    if (node.nodeType == Node.ELEMENT_NODE)
+                        queryNode = node.querySelector(selector);
+
+                    if (queryNode) {
+                        obsv.disconnect();
+                        resolve(queryNode);
+                    }
+                })
+            });
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    });
+}
 
 async function loadDlPopup() {
     const response = await fetch(getInternalURL("../html/dl_popup.html"));
@@ -26,13 +63,12 @@ function openDlPopup() {
         addDlPopup();
 }
 
-function addDlButton() { //TODO: fix button not appering => wait for list_controls
-    let list_controls = document.body.getElementsByTagName("app-anime-list-controls").item(0); //find the control panel
+function addDlButton() {
     let append_elem;
     if (list_controls.childElementCount == 1)
-        append_elem = list_controls.children.item(0);
+        append_elem = list_controls.children.item(0); // append to the div containing the buttons
     else 
-        append_elem = list_controls;
+        append_elem = list_controls; // fallback if thats not possible
     let dl_btn = document.createElement("button"); // create download button
 
     dl_btn.textContent = "DL"; //TODO: replace with img
@@ -45,7 +81,7 @@ function addDlButton() { //TODO: fix button not appering => wait for list_contro
         dl_btn.type = "button";
     }
 
-    dl_btn.onclick = openDlPopup;
+    dl_btn.addEventListener("click", openDlPopup);
     let create_pl_elem = append_elem.getElementsByClassName("float-right ml-auto").item(0); // find create playlist btn
 
     if (create_pl_elem)
@@ -54,7 +90,8 @@ function addDlButton() { //TODO: fix button not appering => wait for list_contro
         append_elem.append(dl_btn); // if not possible insert at the end of control panel
 }
 
-function main() {
+async function main() {
+    list_controls = await waitForElem("app-anime-list-controls"); // find the control panel and safe it for later
     addDlButton();
 }
 
