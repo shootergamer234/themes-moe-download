@@ -12,9 +12,11 @@ export function attachToPopup() {
     document.getElementById("apply-btn").addEventListener("click", event => onClickDownloadBtn(event));
     
     let chk_metadata = document.getElementById("chk-metadata");
+    let sel_ext = document.getElementById("sel-ext");
     rdio_audio.addEventListener("change", () => applyAudioMode());
     rdio_video.addEventListener("change", () => applyVideoMode());
     chk_metadata.addEventListener("change", () => updateSelMetadataType());
+    sel_ext.addEventListener("change", () => updateSelExt())
 
     swapMarginPadding(rdio_audio.nextSibling);
     swapMarginPadding(rdio_video.nextSibling);
@@ -68,8 +70,19 @@ function updateSelMetadataType() {
     else
         fullDisableElem(sel_metadata_type);
 }
+function updateSelExt() {
+    let sel_ext = document.getElementById("sel-ext");
+    if (sel_ext.value == "mp3") {
+        fullEnableElem(document.getElementById("chk-metadata"));
+        fullEnableElem(document.getElementById("sel-metadata-type"));
+    }
+    else {
+        fullDisableElem(document.getElementById("chk-metadata"));
+        fullDisableElem(document.getElementById("sel-metadata-type"));
+    }
+}
 /**
- * Disables a HTMLElement and removes the clickable class of itself or its parrent Element.
+ * Disables a HTMLElement and removes the clickable class of itself or its parent element.
  * @param {HTMLElement} elem - HTMLElement to fully disable.
  */
 function fullDisableElem(elem) {
@@ -80,7 +93,7 @@ function fullDisableElem(elem) {
         removeClass(elem.parentElement, "clickable");
 }
 /**
- * Enables a HTMLElement and appends the clickable class to itself or its parrent Element.
+ * Enables a HTMLElement and appends the clickable class to itself or its parent element.
  * @param {HTMLElement} elem - HTMLElement to fully enable.
  */
 function fullEnableElem(elem) {
@@ -117,9 +130,9 @@ function swapMarginPadding(elem, v_window = document.defaultView) {
     elem.style.padding = temp_margin;
 }
 /**
- * Creates a option Element with the text and value being the same.
+ * Creates a option element with the text and value being the same.
  * @param {string} text - Text and value of the option.
- * @returns {HTMLOptionElement} The option Element with text and value set to the text parameter.
+ * @returns {HTMLOptionElement} The option element with text and value set to the text parameter.
  */
 function createSimpleOption(text) {
     let opt = document.createElement("option");
