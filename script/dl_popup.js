@@ -38,7 +38,7 @@ function onClickDownloadBtn(event) {
     let input_elems = Array.from(popup_window.getElementsByTagName("input")).concat(Array.from(popup_window.getElementsByTagName("select")));
     input_elems.forEach( input_elem => fullDisableElem(input_elem));
 
-    import(getInternalURL("../script/downloader.js")).then((module) => { 
+    import(getInternalURL("../script/themes_downloader.js")).then((module) => { 
         module.startDownload(download_opt);
     });
     event.target.textContent = "Downloading..."; //TODO: add loading wheel

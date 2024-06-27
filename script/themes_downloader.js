@@ -153,6 +153,9 @@ function downloadOGGs(links, embed_metadata, metadata_type) {
  * @returns {string} Equivalent mp3 link.
  */
 async function getMP3Address(link) {
+    // TODO: get list in json format
+    // TODO: search mal id and op type with link
+
     // return fetch(url, { method: "POST" })
     //     .then((response)=> { return response.json() });
 }
