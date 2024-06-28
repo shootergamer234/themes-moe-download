@@ -1,44 +1,86 @@
 //TODO: download of whole list
 
-export async function startDownload(dl_opt) {
+export async function startDownload(dl_opt) { 
     if (dl_opt.file_ext != "mp3") { // normalizing options
         dl_opt.embed_metadata = false; // embedding of everything else than mp3 not supported
         dl_opt.metadata_type = undefined;
     }
 
-    let table_anime = document.getElementsByTagName("app-anime-list-table").item(0).firstElementChild;
-    if (!table_anime)
-        table_anime = document.getElementsByTagName("table").item(0);
-    let links = Array.from(table_anime.getElementsByTagName("a")) // Search for HTMLAnchorElements in the anime table
-        .filter((a) => a.href.endsWith(".webm")); // Filter out HTMLAnchorElements that don't link to a video
-    links.forEach((a, index, arr) => arr[index] = a.href); // Get respective link of HTMLAnchorElement
-    links = Array.from(new Set(links)); // Filter double inputs
+    // let table_anime = document.getElementsByTagName("app-anime-list-table").item(0).firstElementChild;
+    // if (!table_anime)
+    //     table_anime = document.getElementsByTagName("table").item(0);
+    // let links = Array.from(table_anime.getElementsByTagName("a")) // Search for HTMLAnchorElements in the anime table
+    //     .filter((a) => a.href.endsWith(".webm")); // Filter out HTMLAnchorElements that don't link to a video
+    // links.forEach((a, index, arr) => arr[index] = a.href); // Get respective link of HTMLAnchorElement
+    // links = Array.from(new Set(links)); // Filter double inputs
     
-    let zip = new JSZip(); // TODO: downloads.download on >30 vids
-    let title = document.getElementsByTagName("h1").item(0).textContent 
+    let list_json = await getJSONobj(getThemesMoeListURL(window.location.href));
+    
+    
+    let zip = new JSZip();
+    let title = document.getElementsByTagName("h1").item(0).textContent // TODO: account for access from somewhere else than themes.moe
     let pl = zip.folder(title ? title : "playlist");
-    links.forEach(async function(link, index, arr) { 
-        let song_json;
-        console.log(link)
-        if (dl_opt.file_ext == "ogg" || dl_opt.embed_metadata)
-            song_json = await getJSONobj(getAniThemesApiVideoLink(link, dl_opt.file_ext, dl_opt.embed_metadata));
+    let fail_count = 0;
+    let song_count = 0;
+    let song_progress = 0;
 
-        //TODO: transform url for mp3
-        if (dl_opt.file_ext == "ogg")
-            link = song_json.video.audio.link;
+    list_json.forEach((anime) => {
+        anime.themes.forEach(async (theme) => {
+            song_count++;
+            let link = theme.mirror.mirrorURL;
+            let song_json;
+            if (dl_opt.file_ext == "ogg" || dl_opt.embed_metadata)
+                song_json = await getJSONobj(getAniThemesApiVidURL(link, dl_opt.file_ext, dl_opt.embed_metadata));
+            // TODO: exclude double values => lesser fetches
 
-        JSZipUtils.getBinaryContent(link, (error, data) => {
-            console.log(index);
+            if (dl_opt.file_ext == "ogg")
+                link = song_json.video.audio.link;
+            else if (dl_opt.file_ext == "mp3")
+                link = await getMP3Address(link, anime.malID, theme.themeType);
+
+            JSZipUtils.getBinaryContent(link, (error, data) => {
+                console.log((song_progress / song_count * 100).toFixed(2)+"%" + " : downloading " + anime.name + " " + theme.themeType);
+                console.log(data);
+                if (error) {
+                    fail_count++;
+                    throw error;
+                }
+
+                if (dl_opt.embed_metadata && dl_opt.file_ext == "mp3") {} // TODO: embedding of metadata
+                pl.file(getFilenameFromURL(theme.mirror.mirrorURL) + "." + dl_opt.file_ext, // TODO: name from json
+                    data, { base64: true });
+                song_progress++
+                
+                if (song_count == song_progress+fail_count) {
+                    console.log("finished downloading " + title);
+                    zip.generateAsync({type:"blob"})
+                        .then((content) => saveAs(content, title ? title : "playlist"+".zip"));}
+            });
+        })
+    })
+    if (fail_count > 0) console.warn(fail_count + " Downloads failed");
+    // links.forEach(async function(link, index, arr) { 
+    //     let song_json;
+    //     if (dl_opt.file_ext == "ogg" || dl_opt.embed_metadata)
+    //         song_json = await getJSONobj(getAniThemesApiVideoLink(link, dl_opt.file_ext, dl_opt.embed_metadata));
+
+    //     //TODO: transform url for mp3
+    //     if (dl_opt.file_ext == "ogg")
+    //         link = song_json.video.audio.link;
+
+    //     JSZipUtils.getBinaryContent(link, (error, data) => {
+    //         console.log(index);
+    //         if (error) throw error
             
-            if (dl_opt.embed_metadata) {} // TODO: embedding of metadata
-            pl.file(
-                getFilenameFromURL(arr[index]) + "." + dl_opt.file_ext, 
-                data, { base64: true });
-            if (arr.length == index+1)
-                zip.generateAsync({type:"blob"})
-                    .then((content) => saveAs(content, title ? title : "playlist"+".zip"));
-        });
-    });
+    //         if (dl_opt.embed_metadata) {} // TODO: embedding of metadata
+    //         pl.file(
+    //             getFilenameFromURL(arr[index]) + "." + dl_opt.file_ext, 
+    //             data, { base64: true });
+    //         if (arr.length == index+1)
+    //             zip.generateAsync({type:"blob"})
+    //                 .then((content) => saveAs(content, title ? title : "playlist"+".zip"));
+    //     });
+    // });
 
     //console.log(await (await fetch("https://api.animethemes.moe/video/FateStayNightUBWS2-OP1.webm?include=audio,animethemeentries.animetheme.song.artists")).json());
 
@@ -152,12 +194,14 @@ function downloadOGGs(links, embed_metadata, metadata_type) {
  * @param {string} link - Link in webm format to find an equivalent link to.
  * @returns {string} Equivalent mp3 link.
  */
-async function getMP3Address(link) {
-    // TODO: get list in json format
-    // TODO: search mal id and op type with link
-
-    // return fetch(url, { method: "POST" })
-    //     .then((response)=> { return response.json() });
+async function getMP3Address(url, mal_id, theme_type) {
+    if (!mal_id)
+        throw new Error("mal_id has a invalid value");
+    if (!theme_type)
+        throw new Error("theme_type has a invalid value");
+    return fetch("https://themes.moe/api/themes/" + mal_id +"/" + theme_type + "/audio", { method: "POST", body: url ? url : undefined })
+        .then((response)=> response.text())
+        .then((responseText)=> { return responseText; });
 }
 /**
  * Find an equavalant ogg link to a webm link.
@@ -168,31 +212,37 @@ function getOGGAddress(link) {
 
 }
 
-function getAniThemesApiVideoLink(link, file_ext, embed_metadata) {
-    let new_link = link.replace(new RegExp("^(https|http)://(animethemes\.moe/video|v.animethemes.moe)", "i"), "https://api.animethemes.moe/video")
+function getThemesMoeListURL(url) {
+    let api_url = "https://themes\.moe/api";
+    let new_url = url.replace(new RegExp("^https?://themes\.moe/list", "i"), api_url);
+    if (new_url.substring(api_url.length).startsWith("/playlist/"))
+        new_url += new_url.endsWith("/") ? "" : "/" + "anime";
+    return new_url;
+}
+
+function getAniThemesApiVidURL(url, file_ext, embed_metadata) {
+    let new_url = url.replace(new RegExp("^https?://(animethemes\.moe/video|v.animethemes.moe)", "i"), "https://api.animethemes.moe/video");
     if (file_ext != "ogg" && !embed_metadata)
-        return new_link;
-    new_link += "?include="
+        return new_url;
+    new_url += "?include=";
     if (file_ext == "ogg")
-        new_link += "audio"
+        new_url += "audio";
     if (embed_metadata)
         if (file_ext == "ogg")
-            new_link += ",animethemeentries.animetheme.song.artists"
+            new_url += ",animethemeentries.animetheme.song.artists";
         else
-            new_link += "animethemeentries.animetheme.song.artists"
-    return new_link;
+            new_url += "animethemeentries.animetheme.song.artists";
+    return new_url;
 }
 
 async function getJSONobj(url) {
     return fetch(url)
-        .then((response)=>response.json())
-        .then((responseJson)=> { return responseJson });
+        .then((response)=> response.json())
+        .then((responseJson)=> { return responseJson; });
 }
 
 function getFilenameFromURL(url){
     let filename = url.substring(url.lastIndexOf("/")+1, url.lastIndexOf("."));
-    // let last_dash_index = filename.lastIndexOf("-");
-    // if (filename.indexOf("-") != last_dash_index)
-    //     filename = filename.substring(0, last_dash_index);
+    filename = filename.replace(new RegExp("-\D(nc)?\w+\d{3,}$", "i"), "");
     return filename.replace(new RegExp("-", "g"), " ");
 }

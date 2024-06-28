@@ -24,10 +24,6 @@
         "*://themes.moe/api/*"
     ],
 
-    "background": {
-        "scripts": [ "script/background.js" ]
-    },
-
     "content_scripts": [
         {
             "matches": ["*://*.themes.moe/list/*"],
@@ -43,6 +39,7 @@
     ],
 
     "web_accessible_resources": [
+        "script/mp3tag.min.js",
         "script/dl_popup.js",
         "script/downloader.js",
         "script/FileSaver.min.js",
