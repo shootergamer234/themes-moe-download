@@ -29,7 +29,6 @@ function closePopup(event) {
 }
 function onClickDownloadBtn(event) {
     let download_opt = {};
-    download_opt.mode = document.getElementById("rdio-audio").checked ? "audio" : document.getElementById("rdio-video").checked ? "video" : "";
     download_opt.embed_metadata = document.getElementById("chk-metadata").checked;
     download_opt.metadata_type = download_opt.embed_metadata ? document.getElementById("sel-metadata-type").value : "";
     download_opt.file_ext = document.getElementById("sel-ext").value;
@@ -39,7 +38,7 @@ function onClickDownloadBtn(event) {
     input_elems.forEach( input_elem => fullDisableElem(input_elem));
 
     import(getInternalURL("../script/themes_downloader.js")).then((module) => { 
-        module.startDownload(download_opt);
+        module.startDownload(window.location.href, download_opt);
     });
     event.target.textContent = "Downloading..."; //TODO: add loading wheel
 }
