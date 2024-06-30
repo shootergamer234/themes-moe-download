@@ -5,14 +5,13 @@
  * @typedef {object} dl_opt
  * @property {string} [dl_opt.file_ext] - File extension of the downloaded files. Defaults to "mp3".
  * @property {boolean} [dl_opt.embed_metadata] - Whether or not to embed metadata. Defaults to false.
- * @property {string} [dl_opt.metadata_type] - Type of metadata embedding. Supported values are "simple" and "advanced". Defaults to undefined or "advanced" if dl_opt.embed_metadata is true.
  * @property {boolean} [dl_opt.include_multiple_ver] - Whether or not to include multiple versions of a opening. Defaults to false. // TODO: html implementation
  * @property {number} [dl_opt.range_start] - First item to download. Defaults to 1 representing the beginning of the list.
  * @property {number} [dl_opt.range_end] - Last item to download. Defaults to Infinity representing the end of the list.
  */
 /**
- * Anime in the themes.moe API.
- * @typedef {object} Anime
+ * Anime object in the themes.moe API.
+ * @typedef {object} ThemesMoeAnime
  * @property {number} malID
  * @property {string} name
  * @property {number} year
@@ -20,27 +19,77 @@
  * @property {Theme[]} themes
  */
 /**
- * Theme in the themes.moe API.
+ * Theme object in the themes.moe API.
  * @typedef {object} Theme
  * @property {string} themeType
  * @property {string} themeName
  * @property {Mirror} mirror
  */
 /**
- * Download mirror in the themes.moe API.
+ * Download mirror object in the themes.moe API.
  * @typedef {object} Mirror
  * @property {string} mirrorURL
  * @property {number} priority
  * @property {string} notes
  */
-
+/**
+ * Video json object returned by response.json() when connecting using animethemes.moe API
+ * @typedef {object} VideoJsonObj
+ * @property {Video} video
+ */
+/**
+ * Video object in the animethemes.moe API (not all Attrbutes included)
+ * @typedef {object} Video
+ * @property {!number} id
+ * @property {!string} link
+ * @property {!string} filename
+ * @property {!string} [mimetype]
+ * @property {Audio} [audio]
+ * @property {AnimeThemeEntry[]} [animethemeentries]
+ */
+/**
+ * Audio object in the animethemes.moe API (not all Attrbutes included)
+ * @typedef {object} Audio
+ * @property {!number} id
+ * @property {!string} filename
+ * @property {!string} link
+ * @property {!string} [mimetype]
+ */
+/**
+ * Anime Theme Entry object in the animethemes.moe API (not all Attrbutes included)
+ * @typedef {object} AnimeThemeEntry
+ * @property {!number} id
+ * @property {?string} episodes
+ * @property {?number} version
+ * @property {AnimeTheme} [animetheme]
+ */
+/**
+ * Anime Theme object in the animethemes.moe API (not all Attrbutes included)
+ * @typedef {object} AnimeTheme
+ * @property {!number} id
+ * @property {!string} slug
+ * @property {Song} [song]
+ */
+/**
+ * Song object in the animethemes.moe API (not all Attrbutes included)
+ * @typedef {object} Song
+ * @property {!number} id
+ * @property {?string} title
+ * @property {Artist[]} [artists]
+ */
+/**
+ * Artist object in the animethemes.moe API (not all Attrbutes included)
+ * @typedef {object} Artist
+ * @property {!number} id
+ * @property {!string} name
+ * @property {!string} slug
+ */
 /**
  * Downloads themes.moe list in webm, ogg or mp3 format with or without metadata. (Metadata currently only supported for mp3)
  * @param {string} url - URL of the themes.moe list to download.
  * @param {dl_opt} dl_opt - Options for the themes.moe list download.
  * @property {string} [dl_opt.file_ext] - File extension of the downloaded files. Defaults to "mp3".
  * @property {boolean} [dl_opt.embed_metadata] - Whether or not to embed metadata. Defaults to false.
- * @property {string} [dl_opt.metadata_type] - Type of metadata embedding. Supported values are "simple" and "advanced". Defaults to undefined or "advanced" if dl_opt.embed_metadata is true.
  * @property {boolean} [dl_opt.include_multiple_ver] - Whether or not to include multiple versions of a opening. Defaults to false.
  * @property {number} [dl_opt.range_start] - First item to download. Defaults to 1 representing the beginning of the list.
  * @property {number} [dl_opt.range_end] - Last item to download. Defaults to Infinity representing the end of the list.
@@ -63,17 +112,8 @@ export async function startDownload(url, dl_opt) {
         console.warn(dl_opt.file_ext + "is not a supported file extension switching to mp3");
         dl_opt.file_ext = "mp3";
     }
-    if (!dl_opt.embed_metadata)
-        dl_opt.embed_metadata = false;
-    if (!dl_opt.metadata_type)
-        if (dl_opt.embed_metadata) 
-            dl_opt.metadata_type = "advanced";
-        else 
-            dl_opt.metadata_type = undefined;
-    if (dl_opt.file_ext != "mp3") { 
+    if (dl_opt.file_ext != "mp3")
         dl_opt.embed_metadata = false; // embedding of everything else than mp3 not supported
-        dl_opt.metadata_type = undefined;
-    }
     if (!dl_opt.include_multiple_ver || typeof dl_opt.include_multiple_ver != "boolean")
         dl_opt.include_multiple_ver = false
     if (!dl_opt.range_start || typeof dl_opt.range_start != "number")
@@ -81,7 +121,7 @@ export async function startDownload(url, dl_opt) {
     if (!dl_opt.range_end || typeof dl_opt.range_end != "number")
         dl_opt.range_end = Infinity
     //#endregion
-    /** @type {Anime[]} */
+    /** @type {ThemesMoeAnime[]} */
     let list_json = await getJSONobj(getThemesMoeAPIListURL(url));
     
     // @ts-ignore
@@ -94,10 +134,9 @@ export async function startDownload(url, dl_opt) {
     
     list_json.forEach((anime) => {
         anime.themes.forEach((theme, /** @type {number} */ index, arr) => {
-            let url = theme.mirror.mirrorURL;
             let unver_theme_type = "";
             for (let i = index + 1; i < arr.length; i++) {
-                if (url == arr[i].mirror.mirrorURL) {
+                if (theme.mirror.mirrorURL == arr[i].mirror.mirrorURL) {
                     arr.splice(i, 1);
                     i--;
                 }
@@ -119,28 +158,54 @@ export async function startDownload(url, dl_opt) {
 
     list_json.forEach((anime) => {
         anime.themes.forEach(async (theme, /** @type {number} */ index, arr) => {
-            let song_json;
+            let theme_url = theme.mirror.mirrorURL;
+            /** @type {?VideoJsonObj | undefined} */
+            let video_json;
             if (dl_opt.file_ext == "ogg" || dl_opt.embed_metadata)
-                song_json = await getJSONobj(getAniThemesAPIVidURL(url, dl_opt.file_ext, dl_opt.embed_metadata));
-
-            if (dl_opt.file_ext == "ogg")
-                url = song_json.video.audio.link;
-            else if (dl_opt.file_ext == "mp3")
-                url = await getMP3Address(anime.malID, theme.themeType, url);
-
-            // @ts-ignore
-            JSZipUtils.getBinaryContent(url, (error, data) => {
-                console.log((song_progress/song_count*100).toFixed(2)+"%" + " : downloading " + anime.name + " " + theme.themeType);
-                if (error) {
-                    fail_count++;
-                    throw error;
+                video_json = await getJSONobj(getAniThemesAPIVidURL(theme_url, dl_opt.file_ext, dl_opt.embed_metadata)); // TODO: account for rate limiting
+                if (!video_json) {
+                    console.error("Error downloading " + anime.name + " " + theme.themeType + ": couldn't get theme data from animethemes.moe");
+                    return;
                 }
 
-                if (dl_opt.embed_metadata && dl_opt.file_ext == "mp3") {} // TODO: embedding of metadata
+            if (dl_opt.file_ext == "ogg") {
+                if(!video_json.video.audio) {
+                    console.error("Error downloading " + anime.name + " " + theme.themeType + ": couldn't get audio link(ogg) from animethemes.moe");
+                    return;
+                }
+                theme_url = video_json.video.audio.link;
+            }
+            else if (dl_opt.file_ext == "mp3")
+                theme_url = await getMP3Address(anime.malID, theme.themeType, url);
+
+            // @ts-ignore
+            JSZipUtils.getBinaryContent(theme_url, (/** @type {Error} */ error, /** @type {ArrayBuffer} */ data) => {
+                console.info((song_progress/song_count*100).toFixed(1)+"%" + " : downloading " + anime.name + " " + theme.themeType); // TODO: prettier loading screen
+                if (error) {
+                    fail_count++;
+                    console.warn("Skipping metadata embedding: " + error.message);
+                }
+                if (dl_opt.embed_metadata && dl_opt.file_ext == "mp3" && video_json.video.animethemeentries) {
+                    try {
+                        data = embed_theme_metadata(data, video_json.video.animethemeentries, anime, theme, dl_opt);
+                    }
+                    catch (error) {
+                        if (error.message == "theme_entries is empty")
+                            console.warn("Skipping metadata embedding: No Entry for " + anime.name + " ", theme.themeType + " found")
+                        else if (error.message == "animetheme is undefined")
+                            console.warn("Skipping metadata embedding: animetheme of " + anime.name + " ", theme.themeType + " were not included");
+                        else if (error.message.startsWith("MP3Tag: "))
+                            console.warn("Skipping metadata embedding: " + error.message);
+                        else
+                            throw error;
+                    }
+                }
+                else
+                    console.warn("Skipping metadata embedding: animethemeentries of " + anime.name + " ", theme.themeType + " were not included");
+                
                 pl.file(
                     anime.name + " " + (dl_opt.include_multiple_ver ? theme.themeType : theme.themeType.replace(new RegExp(" V\\d+$", "i"), "")) + "." + dl_opt.file_ext, 
-                    data, 
-                    { base64: true }); 
+                    data, { base64: true }); 
                 song_progress++
                 
                 if (song_count == song_progress+fail_count) {
@@ -150,12 +215,72 @@ export async function startDownload(url, dl_opt) {
                     console.info("finished downloading " + title);
                 }
             });
-        })
-    })
+        });
+    });
     if (fail_count > 0) 
         console.warn(fail_count + " Downloads failed");
 }
 
+/**
+ * Embeds metadata of an AnimeTheme to file buffer. Writes title, artists, genre and comment.
+ * @param {ArrayBuffer | Buffer} buffer - Buffer of the file. (only mp3 supported)
+ * @param {AnimeThemeEntry[]} theme_entries - Array of theme_entries with the metadata being in the song attribute of a AnimeTheme.
+ * @param {ThemesMoeAnime} anime - Anime object in the themes.moe API.
+ * @param {Theme} theme - Theme object in the themes.moe API.
+ * @param {dl_opt} dl_opt - Options for the themes.moe list download.
+ * @returns {ArrayBuffer | Buffer} Buffer of the file embedded with metadata.
+ * @throws Throws an error if theme_entries is invalid or embedding fails otherwise.
+ */
+function embed_theme_metadata(buffer, theme_entries, anime, theme, dl_opt) {
+    if (!theme_entries || !Array.isArray(theme_entries))
+        throw TypeError("theme_entries is not a valid Array");
+    if (theme_entries.length == 0)
+        throw Error("theme_entries is empty");
+    if (theme_entries.length > 1)
+        console.warn("multiple theme entries found applying first entry"); // TODO: better warnings
+    if (!theme_entries[0].animetheme)
+        throw Error("animetheme is undefined");
+    let song = theme_entries[0].animetheme.song;
+    if (!song)
+        throw Error("Song is undefined");
+
+    return embed_mp3_metadata(buffer, song.title, song.artists, "Anime Music", 
+        anime.name + " " + (dl_opt.include_multiple_ver ? theme.themeType : theme.themeType.replace(new RegExp(" V\\d+$", "i"), "")) + "\n"
+        + "downloaded from themes.moe with themes_downloader");
+}
+
+/**
+ * Embeds metadata to mp3 buffer. Writes title, artists, genre and comment.
+ * @param {ArrayBuffer | Buffer} buffer - Buffer of the mp3 file.
+ * @param {?string | undefined} title - Title to be added as ID3v2 Tag.
+ * @param {?Artist[] | undefined} artists - Artists to be added as ID3v2 Tag.
+ * @param {?string | undefined} genre - Genre to be added as ID3v2 Tag.
+ * @param {?string | undefined} description - Discription to be added as ID3v2 Tag. May conatain newlines.
+ * @returns {ArrayBuffer | Buffer} Buffer of the mp3 file embedded with metadata.
+ * @throws Throws an error if embedding fails in MP3Tag.
+ */
+function embed_mp3_metadata(buffer, title, artists, genre, description) {
+    // @ts-ignore
+    let mp3tag = new MP3Tag(buffer);
+    if (mp3tag.error !== '')
+        throw new Error("MP3Tag: " + mp3tag.error);
+    mp3tag.read();
+    if (mp3tag.error !== '')
+        throw new Error("MP3Tag: " + mp3tag.error);
+    mp3tag.tags.title = title ? title : undefined;
+    mp3tag.tags.artist = artists ? getCombinedArtistString(artists) : undefined;
+    mp3tag.tags.genre = genre;
+    mp3tag.tags.v2.COMM = description ? [{
+        language: "eng",
+        descriptor: "",
+        text: description
+        }] : undefined;
+    // TODO: attach picture? mp3tag.tags.v2.APIC
+    buffer = mp3tag.save({ strict: true });
+    if (mp3tag.error !== '')
+        throw new Error("MP3Tag: " + mp3tag.error);
+    return buffer;
+}
 /**
  * Find an equavalant mp3 link to a webm link.
  * @param {!string | !number} mal_id - MyAnimeList ID to the anime linked to the opening.
@@ -204,6 +329,19 @@ function getAniThemesAPIVidURL(url, file_ext, embed_metadata) {
         else
             new_url += "animethemeentries.animetheme.song.artists";
     return new_url;
+}
+/**
+ * Combines a list of artists into the the typical format "artist1 feat. artist2, artist3".
+ * @param {Artist[]} artists - Array of artists with a name attribute.
+ * @returns {string} String containing all artists in the typical format.
+ */
+function getCombinedArtistString(artists){
+    if (!artists || !Array.isArray(artists))
+        throw TypeError("Artists is not a valid Array")
+    return artists.reduce((acc, artist, index) => {
+        let name = artist.name;
+        return index == 0 ? acc + name : index == 1 ? acc + " feat. " + name : acc + ", " + name;
+    }, "");
 }
 /**
  * Fetches the url and returns the value of the response.json() method;

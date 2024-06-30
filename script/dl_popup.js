@@ -1,5 +1,4 @@
 export function attachToPopup() {
-    updateSelMetadataType();
     let rdio_audio = document.getElementById("rdio-audio");
     let rdio_video = document.getElementById("rdio-video");
     if (rdio_audio.checked)
@@ -15,7 +14,6 @@ export function attachToPopup() {
     let sel_ext = document.getElementById("sel-ext");
     rdio_audio.addEventListener("change", () => applyAudioMode());
     rdio_video.addEventListener("change", () => applyVideoMode());
-    chk_metadata.addEventListener("change", () => updateSelMetadataType());
     sel_ext.addEventListener("change", () => updateSelExt())
 
     swapMarginPadding(rdio_audio.nextSibling);
@@ -30,7 +28,6 @@ function closePopup(event) {
 function onClickDownloadBtn(event) {
     let download_opt = {};
     download_opt.embed_metadata = document.getElementById("chk-metadata").checked;
-    download_opt.metadata_type = download_opt.embed_metadata ? document.getElementById("sel-metadata-type").value : "";
     download_opt.file_ext = document.getElementById("sel-ext").value;
     
     let popup_window = document.getElementById("popup-window");
@@ -44,7 +41,6 @@ function onClickDownloadBtn(event) {
 }
 function applyVideoMode() {
     fullDisableElem(document.getElementById("chk-metadata"));
-    fullDisableElem(document.getElementById("sel-metadata-type"));
     let sel_ext = document.getElementById("sel-ext");
     fullDisableElem(sel_ext);
     while (sel_ext.firstChild)
@@ -60,25 +56,13 @@ function applyAudioMode() {
         sel_ext.removeChild(sel_ext.firstChild);
     sel_ext.append(createSimpleOption("mp3"));
     sel_ext.append(createSimpleOption("ogg"));
-    updateSelMetadataType();
-}
-function updateSelMetadataType() {
-    let sel_metadata_type = document.getElementById("sel-metadata-type")
-    if (document.getElementById("chk-metadata").checked)
-        fullEnableElem(sel_metadata_type);
-    else
-        fullDisableElem(sel_metadata_type);
 }
 function updateSelExt() {
     let sel_ext = document.getElementById("sel-ext");
-    if (sel_ext.value == "mp3") {
+    if (sel_ext.value == "mp3")
         fullEnableElem(document.getElementById("chk-metadata"));
-        fullEnableElem(document.getElementById("sel-metadata-type"));
-    }
-    else {
+    else
         fullDisableElem(document.getElementById("chk-metadata"));
-        fullDisableElem(document.getElementById("sel-metadata-type"));
-    }
 }
 /**
  * Disables a HTMLElement and removes the clickable class of itself or its parent element.
