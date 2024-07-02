@@ -161,15 +161,16 @@ export async function startDownload(url, dl_opt) {
             let theme_url = theme.mirror.mirrorURL;
             /** @type {?VideoJsonObj | undefined} */
             let video_json;
-            if (dl_opt.file_ext == "ogg" || dl_opt.embed_metadata)
+            if (dl_opt.file_ext == "ogg" || dl_opt.embed_metadata) {
                 video_json = await getJSONobj(getAniThemesAPIVidURL(theme_url, dl_opt.file_ext, dl_opt.embed_metadata)); // TODO: account for rate limiting
                 if (!video_json) {
                     console.error("Error downloading " + anime.name + " " + theme.themeType + ": couldn't get theme data from animethemes.moe");
                     return;
                 }
+            }
 
-            if (dl_opt.file_ext == "ogg") {
-                if(!video_json.video.audio) {
+            if (video_json && dl_opt.file_ext == "ogg") {
+                if (!video_json.video.audio) {
                     console.error("Error downloading " + anime.name + " " + theme.themeType + ": couldn't get audio link(ogg) from animethemes.moe");
                     return;
                 }
@@ -185,7 +186,7 @@ export async function startDownload(url, dl_opt) {
                     fail_count++;
                     console.warn("Skipping metadata embedding: " + error.message);
                 }
-                if (dl_opt.embed_metadata && dl_opt.file_ext == "mp3" && video_json.video.animethemeentries) {
+                if (dl_opt.embed_metadata && dl_opt.file_ext == "mp3" && video_json && video_json.video.animethemeentries) {
                     try {
                         data = embed_theme_metadata(data, video_json.video.animethemeentries, anime, theme, dl_opt);
                     }
