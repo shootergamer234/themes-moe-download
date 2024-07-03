@@ -6,7 +6,9 @@
     "description": "Adds a Download button to every themes.moe list and downloads them either as video or audio (mp3/ogg)",
 
     "icons" : {
-        "48": "icon/download.png"
+        "48": "icon/icon_48.png",
+        "96": "icon/icon_96.png",
+        "128": "icon/icon_128.png"
     },
 
     "browser_specific_settings": {
