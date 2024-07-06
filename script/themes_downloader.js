@@ -115,11 +115,11 @@ export async function startDownload(url, dl_opt) {
     if (dl_opt.file_ext != "mp3")
         dl_opt.embed_metadata = false; // embedding of everything else than mp3 not supported
     if (!dl_opt.include_multiple_ver || typeof dl_opt.include_multiple_ver != "boolean")
-        dl_opt.include_multiple_ver = false
+        dl_opt.include_multiple_ver = false;
     if (!dl_opt.range_start || typeof dl_opt.range_start != "number" || dl_opt.range_start < 1)
-        dl_opt.range_start = 1
+        dl_opt.range_start = 1;
     if (!dl_opt.range_end || typeof dl_opt.range_end != "number")
-        dl_opt.range_end = Infinity
+        dl_opt.range_end = Infinity;
     if (dl_opt.range_end < dl_opt.range_start){
         let temp = dl_opt.range_start;
         dl_opt.range_start = dl_opt.range_end;
@@ -138,7 +138,7 @@ export async function startDownload(url, dl_opt) {
     let song_progress = 0;
     
     list_json.forEach((anime) => {
-        anime.themes.forEach((theme, /** @type {number} */ index, arr) => {
+        anime.themes.forEach((theme, index, arr) => {
             let unver_theme_type = "";
             if (!dl_opt.include_multiple_ver) {
                 let space_index = theme.themeType.indexOf(" ");
@@ -164,8 +164,25 @@ export async function startDownload(url, dl_opt) {
         })
     });
 
+    let skip_count = 0;
+    let temp_song_count = 0;
     list_json.forEach((anime) => {
-        anime.themes.forEach(async (theme, /** @type {number} */ index, arr) => {
+        for (let i = 0; i < anime.themes.length; i++) {
+            temp_song_count++;
+            if (dl_opt.range_start && skip_count < dl_opt.range_start-1 || 
+                dl_opt.range_end && temp_song_count > dl_opt.range_end) {
+                anime.themes.splice(i, 1);
+                i--;
+                skip_count++;
+                continue;
+            }
+        }
+    });
+
+    song_count = dl_opt.range_end - dl_opt.range_start + 1;
+    
+    list_json.forEach((anime) => {
+        anime.themes.forEach(async (theme, index, arr) => {
             let theme_url = theme.mirror.mirrorURL;
             /** @type {?VideoJsonObj | undefined} */
             let video_json;
@@ -251,7 +268,7 @@ export async function getThemeCount(url, include_multiple_ver) {
     let song_count = 0;
     
     list_json.forEach((anime) => {
-        anime.themes.forEach((theme, /** @type {number} */ index, arr) => {
+        anime.themes.forEach((theme, index, arr) => {
             let unver_theme_type = "";
             if (!include_multiple_ver){
                 let space_index = theme.themeType.indexOf(" ");

@@ -45,8 +45,23 @@ function onClickDownloadBtn(event) {
     download_opt.embed_metadata = document.getElementById("chk-metadata").checked;
     download_opt.file_ext = document.getElementById("sel-ext").value;
     download_opt.include_multiple_ver = document.getElementById("chk-mul-ver").checked;
-    download_opt.range_start = document.getElementById("input-range-start").value;
-    download_opt.range_end = document.getElementById("input-range-end").value;
+    let chk_range = document.getElementById("chk-range")
+    if (chk_range.checked) {
+        let range_start = document.getElementById("input-range-start");
+        let start = parseInt(range_start.value, 10);
+        if (Number.isNaN(start) || start < 1) {
+            range_start.value = 1;
+            start = 1;
+        }
+        download_opt.range_start = start;
+        let range_end = document.getElementById("input-range-end");
+        let end = parseInt(range_end.value, 10);
+        if (Number.isNaN(end) || end > max_range_end) {
+            range_end.value = max_range_end;
+            end = max_range_end;
+        }
+        download_opt.range_end = end;
+    }
     
     let popup_window = document.getElementById("popup-window");
     let input_elems = Array.from(popup_window.getElementsByTagName("input")).concat(Array.from(popup_window.getElementsByTagName("select"))); // TODO: disable buttons as well
