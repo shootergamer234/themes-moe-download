@@ -1,3 +1,5 @@
+var max_range_end;
+
 export function attachToPopup() {
     let rdio_audio = document.getElementById("rdio-audio");
     let rdio_video = document.getElementById("rdio-video");
@@ -10,15 +12,28 @@ export function attachToPopup() {
     document.getElementById("cancel-btn").addEventListener("click", event => closePopup(event));
     document.getElementById("apply-btn").addEventListener("click", event => onClickDownloadBtn(event));
     
-    let chk_metadata = document.getElementById("chk-metadata");
-    let sel_ext = document.getElementById("sel-ext");
     rdio_audio.addEventListener("change", () => applyAudioMode());
     rdio_video.addEventListener("change", () => applyVideoMode());
-    sel_ext.addEventListener("change", () => updateSelExt())
+    document.getElementById("sel-ext").addEventListener("change", () => updateSelExt());
+    document.getElementById("chk-mul-ver").addEventListener("change", () => calculateRangeEnd());
+    document.getElementById("chk-range").addEventListener("change", (event) => {
+        let range_start = document.getElementById("input-range-start");
+        let range_end = document.getElementById("input-range-end");
+        if (event.target.checked) {
+            range_start.disabled = false;
+            range_end.disabled = false;
+        }
+        else {
+            range_start.disabled = true;
+            range_end.disabled = true;
+            range_start.value = 1;
+            range_end.value = max_range_end;
+        }
+    });
 
-    swapMarginPadding(rdio_audio.nextSibling);
-    swapMarginPadding(rdio_video.nextSibling);
-    swapMarginPadding(chk_metadata.nextSibling);
+    calculateRangeEnd();
+    let labels = Array.from(document.getElementById("popup-content").getElementsByTagName("label"));
+    labels.forEach((label) => swapMarginPadding(label));
 }
 
 function closePopup(event) {
@@ -29,9 +44,12 @@ function onClickDownloadBtn(event) {
     let download_opt = {};
     download_opt.embed_metadata = document.getElementById("chk-metadata").checked;
     download_opt.file_ext = document.getElementById("sel-ext").value;
+    download_opt.include_multiple_ver = document.getElementById("chk-mul-ver").checked;
+    download_opt.range_start = document.getElementById("input-range-start").value;
+    download_opt.range_end = document.getElementById("input-range-end").value;
     
     let popup_window = document.getElementById("popup-window");
-    let input_elems = Array.from(popup_window.getElementsByTagName("input")).concat(Array.from(popup_window.getElementsByTagName("select")));
+    let input_elems = Array.from(popup_window.getElementsByTagName("input")).concat(Array.from(popup_window.getElementsByTagName("select"))); // TODO: disable buttons as well
     input_elems.forEach( input_elem => fullDisableElem(input_elem));
 
     import(getInternalURL("../script/themes_downloader.js")).then((module) => { 
@@ -63,6 +81,39 @@ function updateSelExt() {
         fullEnableElem(document.getElementById("chk-metadata"));
     else
         fullDisableElem(document.getElementById("chk-metadata"));
+}
+function calculateRangeEnd() {
+    let count = 0;
+
+    let table_anime = document.getElementsByTagName("app-anime-list-table").item(0).firstElementChild;
+    if (!table_anime)
+        table_anime = document.getElementsByTagName("table").item(0);
+    let rows = Array.from(table_anime.getElementsByTagName("tr"))
+    rows.forEach((row) => {
+        Array.from(row.getElementsByTagName("a")).filter((a) => a.href.endsWith(".webm")). // include only anchors with .webm at the end of their links
+        forEach((a, index, arr) => {
+            for (let i = index + 1; i < arr.length; i++) {
+                if (a.href == arr[i].href) {
+                    arr.splice(i, 1);
+                    i--;
+                    continue;
+                }
+                if (!document.getElementById("chk-mul-ver").checked) {
+                    let space_a = a.text.indexOf(" ");
+                    if (arr[i].text.startsWith(a.text.substring(0, space_a != -1 ? space_a : undefined))) { // check if they are the same opening but different versions and exclude.
+                        arr.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+            count++;
+        });
+    }); 
+    document.getElementById("input-range-start").max = count;
+    let range_end = document.getElementById("input-range-end");
+    range_end.max = count;
+    range_end.value = count;
+    max_range_end = count;
 }
 /**
  * Disables a HTMLElement and removes the clickable class of itself or its parent element.

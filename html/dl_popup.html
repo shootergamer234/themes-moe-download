@@ -1,4 +1,8 @@
-<link href="../css/popup.css" rel="stylesheet">
+<!DOCTYPE html>
+<head>
+    <link href="../css/popup.css" rel="stylesheet">
+</head>
+<body>
 <div id="popup-container">
     <div id="popup-backdrop"></div>
     <div id="popup-flexbox">
@@ -28,6 +32,16 @@
                     <select id="sel-ext" name="ext" class="clickable">
                     </select>
                 </div>
+                <div class="row-box">
+                    <div class="clickable">
+                        <input id="chk-mul-ver" name="mul-ver" class="no-margin" type="checkbox"/><label for="chk-mul-ver" class="ltr-label">Include multiple versions</label>
+                    </div>
+                </div>
+                <div class="row-box">
+                    <div class="clickable">
+                        <input id="chk-range" name="range" class="no-margin" type="checkbox"/><label for="chk-range" class="double-sided-label">Range:</label><input id="input-range-start" name="range-start" class="compact-input" type="number" min="1" value="1" disabled/><p class="spaced-inline">-</p><input id="input-range-end" name="range-end" class="compact-input" type="number" min="1" disabled/>
+                    </div>
+                </div>
                 </form>
             </div>
             <div class="div-seperator-line"></div>
@@ -37,3 +51,4 @@
         </div>
     </div>
 </div>
+</body>

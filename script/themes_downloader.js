@@ -5,7 +5,7 @@
  * @typedef {object} dl_opt
  * @property {string} [dl_opt.file_ext] - File extension of the downloaded files. Defaults to "mp3".
  * @property {boolean} [dl_opt.embed_metadata] - Whether or not to embed metadata. Defaults to false.
- * @property {boolean} [dl_opt.include_multiple_ver] - Whether or not to include multiple versions of a opening. Defaults to false. // TODO: html implementation
+ * @property {boolean} [dl_opt.include_multiple_ver] - Whether or not to include multiple versions of a opening. Defaults to false.
  * @property {number} [dl_opt.range_start] - First item to download. Defaults to 1 representing the beginning of the list.
  * @property {number} [dl_opt.range_end] - Last item to download. Defaults to Infinity representing the end of the list.
  */
@@ -91,8 +91,8 @@
  * @property {string} [dl_opt.file_ext] - File extension of the downloaded files. Defaults to "mp3".
  * @property {boolean} [dl_opt.embed_metadata] - Whether or not to embed metadata. Defaults to false.
  * @property {boolean} [dl_opt.include_multiple_ver] - Whether or not to include multiple versions of a opening. Defaults to false.
- * @property {number} [dl_opt.range_start] - First item to download. Defaults to 1 representing the beginning of the list.
- * @property {number} [dl_opt.range_end] - Last item to download. Defaults to Infinity representing the end of the list.
+ * @property {number} [dl_opt.range_start] - First item to download. Defaults to 1 representing the beginning of the list if undefined or out of range.
+ * @property {number} [dl_opt.range_end] - Last item to download. Defaults to Infinity representing the end of the list if undefined or out of range.
 */
 export async function startDownload(url, dl_opt) { 
     //#region normalizing parameters
@@ -116,10 +116,15 @@ export async function startDownload(url, dl_opt) {
         dl_opt.embed_metadata = false; // embedding of everything else than mp3 not supported
     if (!dl_opt.include_multiple_ver || typeof dl_opt.include_multiple_ver != "boolean")
         dl_opt.include_multiple_ver = false
-    if (!dl_opt.range_start || typeof dl_opt.range_start != "number")
+    if (!dl_opt.range_start || typeof dl_opt.range_start != "number" || dl_opt.range_start < 1)
         dl_opt.range_start = 1
     if (!dl_opt.range_end || typeof dl_opt.range_end != "number")
         dl_opt.range_end = Infinity
+    if (dl_opt.range_end < dl_opt.range_start){
+        let temp = dl_opt.range_start;
+        dl_opt.range_start = dl_opt.range_end;
+        dl_opt.range_end = temp;
+    }
     //#endregion
     /** @type {ThemesMoeAnime[]} */
     let list_json = await getJSONobj(getThemesMoeAPIListURL(url));
@@ -135,17 +140,19 @@ export async function startDownload(url, dl_opt) {
     list_json.forEach((anime) => {
         anime.themes.forEach((theme, /** @type {number} */ index, arr) => {
             let unver_theme_type = "";
+            if (!dl_opt.include_multiple_ver) {
+                let space_index = theme.themeType.indexOf(" ");
+                unver_theme_type = theme.themeType.substring(0, space_index != -1 ? space_index : undefined);
+            }
             for (let i = index + 1; i < arr.length; i++) {
                 if (theme.mirror.mirrorURL == arr[i].mirror.mirrorURL) {
                     arr.splice(i, 1);
                     i--;
+                    continue;
                 }
                 if (!dl_opt.include_multiple_ver) {
-                    if (!unver_theme_type)
-                        unver_theme_type = theme.themeType.substring(0, theme.themeType.indexOf(" "))
                     if (unver_theme_type == "") {
-                        console.warn("themeType for version differentiating couldn't be detected. Final file might include multiple versions.")
-                        continue;
+                        console.warn("themeType for version differentiating couldn't be detected. Final file might include multiple versions of " + anime.name + " " + theme.themeType);
                     }
                     if (arr[i].themeType.startsWith(unver_theme_type)) {
                         arr.splice(i, 1);
@@ -154,7 +161,8 @@ export async function startDownload(url, dl_opt) {
                 }
             }
             song_count++;
-        })});
+        })
+    });
 
     list_json.forEach((anime) => {
         anime.themes.forEach(async (theme, /** @type {number} */ index, arr) => {
@@ -165,6 +173,7 @@ export async function startDownload(url, dl_opt) {
                 video_json = await getJSONobj(getAniThemesAPIVidURL(theme_url, dl_opt.file_ext, dl_opt.embed_metadata)); // TODO: account for rate limiting
                 if (!video_json) {
                     console.error("Error downloading " + anime.name + " " + theme.themeType + ": couldn't get theme data from animethemes.moe");
+                    fail_count++;
                     return;
                 }
             }
@@ -172,6 +181,7 @@ export async function startDownload(url, dl_opt) {
             if (video_json && dl_opt.file_ext == "ogg") {
                 if (!video_json.video.audio) {
                     console.error("Error downloading " + anime.name + " " + theme.themeType + ": couldn't get audio link(ogg) from animethemes.moe");
+                    fail_count++;
                     return;
                 }
                 theme_url = video_json.video.audio.link;
@@ -186,23 +196,24 @@ export async function startDownload(url, dl_opt) {
                     fail_count++;
                     console.warn("Skipping metadata embedding: " + error.message);
                 }
-                if (dl_opt.embed_metadata && dl_opt.file_ext == "mp3" && video_json && video_json.video.animethemeentries) {
-                    try {
-                        data = embed_theme_metadata(data, video_json.video.animethemeentries, anime, theme, dl_opt);
+                if (dl_opt.embed_metadata && dl_opt.file_ext == "mp3")
+                    if (video_json && video_json.video.animethemeentries) {
+                        try {
+                            data = embed_theme_metadata(data, video_json.video.animethemeentries, anime, theme, dl_opt);
+                        }
+                        catch (error) {
+                            if (error.message == "theme_entries is empty")
+                                console.warn("Skipping metadata embedding: No Entry for " + anime.name + " ", theme.themeType + " found")
+                            else if (error.message == "animetheme is undefined")
+                                console.warn("Skipping metadata embedding: animetheme of " + anime.name + " ", theme.themeType + " were not included");
+                            else if (error.message.startsWith("MP3Tag: "))
+                                console.warn("Skipping metadata embedding: " + error.message);
+                            else
+                                throw error;
+                        }
                     }
-                    catch (error) {
-                        if (error.message == "theme_entries is empty")
-                            console.warn("Skipping metadata embedding: No Entry for " + anime.name + " ", theme.themeType + " found")
-                        else if (error.message == "animetheme is undefined")
-                            console.warn("Skipping metadata embedding: animetheme of " + anime.name + " ", theme.themeType + " were not included");
-                        else if (error.message.startsWith("MP3Tag: "))
-                            console.warn("Skipping metadata embedding: " + error.message);
-                        else
-                            throw error;
-                    }
-                }
-                else
-                    console.warn("Skipping metadata embedding: animethemeentries of " + anime.name + " ", theme.themeType + " were not included");
+                    else
+                        console.warn("Skipping metadata embedding: animethemeentries of " + anime.name + " ", theme.themeType + " were not included");
                 
                 pl.file(
                     anime.name + " " + (dl_opt.include_multiple_ver ? theme.themeType : theme.themeType.replace(new RegExp(" V\\d+$", "i"), "")) + "." + dl_opt.file_ext, 
@@ -219,7 +230,54 @@ export async function startDownload(url, dl_opt) {
         });
     });
     if (fail_count > 0) 
-        console.warn(fail_count + " Downloads failed");
+        console.warn(fail_count + " Downloads failed Zip might not contain all files");
+}
+
+/**
+ * Counts the themes of a themes.moe list.
+ * @param {string} url - URL of the themes.moe list to count the themes for.
+ * @param {any} include_multiple_ver - Whether or not to include multiple versions of a opening.
+ * @returns {Promise<number>} Count of themes with or without including multiple versions.
+ */
+export async function getThemeCount(url, include_multiple_ver) {
+    if (!url.match(new RegExp("^https?://.+$", "i")))
+        throw new Error("url is not in an URL format: \"^https?://.+$\"")
+    if (!url.match(new RegExp("^https?://themes.moe/list/.+/.+$", "i")))
+        throw new Error("url is not an URL to a themes.moe list")
+
+    /** @type {ThemesMoeAnime[]} */
+    let list_json = await getJSONobj(getThemesMoeAPIListURL(url));
+
+    let song_count = 0;
+    
+    list_json.forEach((anime) => {
+        anime.themes.forEach((theme, /** @type {number} */ index, arr) => {
+            let unver_theme_type = "";
+            if (!include_multiple_ver){
+                let space_index = theme.themeType.indexOf(" ");
+                theme.themeType.substring(0, space_index != -1 ? space_index : undefined);
+                if (unver_theme_type == "")
+                    console.warn("themeType for version differentiating couldn't be detected. Count might include multiple versions.");
+            }
+            for (let i = index + 1; i < arr.length; i++) {
+                if (theme.mirror.mirrorURL == arr[i].mirror.mirrorURL) {
+                    arr.splice(i, 1);
+                    i--;
+                    continue;
+                }
+                if (!arr[i])
+                    debugger;
+                if (!include_multiple_ver) {
+                    if (arr[i].themeType.startsWith(unver_theme_type)) {
+                        arr.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+            song_count++;
+        })
+    });
+    return song_count;
 }
 
 /**

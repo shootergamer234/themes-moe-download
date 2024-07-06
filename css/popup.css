@@ -104,6 +104,11 @@ body {
     margin: 0;
 }
 
+.spaced-inline {
+    margin: 5px;
+    display: inline;
+}
+
 .row-box {
     display: flex;
     flex-direction: row;
@@ -118,6 +123,17 @@ body {
     margin: 0 0 0 5px;
 }
 
+.rtl-label {
+    margin: 0 5px 0 0;
+}
+
+.double-sided-label {
+    margin: 0 5px;
+}
+
+.compact-input {
+    width: 60px;
+}
 .cancel-btn {
     color: #fff;
     background-color: #dc3545;
@@ -139,7 +155,7 @@ body {
     border-color: #1e7e34;
 }
 
-.clickable:not(div), .clickable>input, .clickable>label {
+.clickable:not(div), .clickable>input[type="checkbox"], .clickable>input[type="radio"], .clickable>label {
     user-select: none;
     cursor: pointer;
 }
