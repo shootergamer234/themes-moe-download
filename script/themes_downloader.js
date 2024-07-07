@@ -137,7 +137,7 @@ export async function startDownload(url, dl_opt) {
     let song_count = 0;
     let song_progress = 0;
     
-    list_json.forEach((anime) => {
+    list_json.forEach(anime => {
         anime.themes.forEach((theme, index, arr) => {
             let unver_theme_type = "";
             if (!dl_opt.include_multiple_ver) {
@@ -166,7 +166,7 @@ export async function startDownload(url, dl_opt) {
 
     let skip_count = 0;
     let temp_song_count = 0;
-    list_json.forEach((anime) => {
+    list_json.forEach(anime => {
         for (let i = 0; i < anime.themes.length; i++) {
             temp_song_count++;
             if (dl_opt.range_start && skip_count < dl_opt.range_start-1 || 
@@ -179,9 +179,10 @@ export async function startDownload(url, dl_opt) {
         }
     });
 
-    song_count = dl_opt.range_end - dl_opt.range_start + 1;
+    if (dl_opt.range_end != Infinity)
+        song_count = dl_opt.range_end - dl_opt.range_start + 1;
     
-    list_json.forEach((anime) => {
+    list_json.forEach(anime => {
         anime.themes.forEach(async (theme, index, arr) => {
             let theme_url = theme.mirror.mirrorURL;
             /** @type {?VideoJsonObj | undefined} */
@@ -240,7 +241,7 @@ export async function startDownload(url, dl_opt) {
                 if (song_count == song_progress+fail_count) {
                     console.info("zipping...")
                     // @ts-ignore
-                    zip.generateAsync({type:"blob"}).then((content) => saveAs(content, title ? title : "playlist"+".zip"));
+                    zip.generateAsync({type:"blob"}).then(content => saveAs(content, title ? title : "playlist"+".zip"));
                     console.info("finished downloading " + title);
                 }
             });
@@ -267,7 +268,7 @@ export async function getThemeCount(url, include_multiple_ver) {
 
     let song_count = 0;
     
-    list_json.forEach((anime) => {
+    list_json.forEach(anime => {
         anime.themes.forEach((theme, index, arr) => {
             let unver_theme_type = "";
             if (!include_multiple_ver){
@@ -313,7 +314,7 @@ function embed_theme_metadata(buffer, theme_entries, anime, theme, dl_opt) {
     if (theme_entries.length == 0)
         throw Error("theme_entries is empty");
     if (theme_entries.length > 1)
-        console.warn("multiple theme entries found applying first entry"); // TODO: better warnings
+        console.warn("multiple theme entries found applying first entry"); // TODO: better warnings: adjustable behaviour through callbacks?
     if (!theme_entries[0].animetheme)
         throw Error("animetheme is undefined");
     let song = theme_entries[0].animetheme.song;

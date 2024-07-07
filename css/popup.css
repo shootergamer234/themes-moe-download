@@ -91,9 +91,14 @@ body {
 .ext-btn:hover {
     text-decoration: none;
 }
-
+.ext-btn:focus {
+    outline: 0;
+}
 .ext-btn:not(:disabled) {
     cursor: pointer;
+}
+.ext-btn:disabled {
+    opacity: .65;
 }
 
 .menu-elem {
@@ -144,6 +149,17 @@ body {
     background-color: #c82333;
     border-color: #bd2130;
 }
+.cancel-btn:focus {
+    color: #fff;
+    background-color: #c82333;
+    border-color: #bd2130;
+    box-shadow: 0 0 0 .2rem rgba(225,83,97,.5);
+}
+.cancel-btn:disabled {
+    color: #fff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
 .apply-btn {
     color: #fff;
     background-color: #28a745;
@@ -154,7 +170,17 @@ body {
     background-color: #218838;
     border-color: #1e7e34;
 }
-
+.apply-btn:focus {
+    color: #fff;
+    background-color: #218838;
+    border-color: #1e7e34;
+    box-shadow: 0 0 0 .2rem rgba(72,180,97,.5);
+}
+.apply-btn:disabled {
+    color: #fff;
+    background-color: #28a745;
+    border-color: #28a745;
+}
 .clickable:not(div), .clickable>input[type="checkbox"], .clickable>input[type="radio"], .clickable>label {
     user-select: none;
     cursor: pointer;

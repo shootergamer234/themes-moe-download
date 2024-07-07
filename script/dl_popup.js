@@ -1,4 +1,5 @@
-var max_range_end;
+var max_range_end = 0;
+var download_running = false;
 
 export function attachToPopup() {
     let rdio_audio = document.getElementById("rdio-audio");
@@ -16,7 +17,7 @@ export function attachToPopup() {
     rdio_video.addEventListener("change", () => applyVideoMode());
     document.getElementById("sel-ext").addEventListener("change", () => updateSelExt());
     document.getElementById("chk-mul-ver").addEventListener("change", () => calculateRangeEnd());
-    document.getElementById("chk-range").addEventListener("change", (event) => {
+    document.getElementById("chk-range").addEventListener("change", event => {
         let range_start = document.getElementById("input-range-start");
         let range_end = document.getElementById("input-range-end");
         if (event.target.checked) {
@@ -33,12 +34,17 @@ export function attachToPopup() {
 
     calculateRangeEnd();
     let labels = Array.from(document.getElementById("popup-content").getElementsByTagName("label"));
-    labels.forEach((label) => swapMarginPadding(label));
+    labels.forEach(label => swapMarginPadding(label));
 }
 
 function closePopup(event) {
-    if (!event || event.currentTarget == event.explicitOriginalTarget)
-        document.getElementById("popup-container").remove();
+    if (event.currentTarget != event.explicitOriginalTarget || 
+        download_running && event.currentTarget.id == "popup-flexbox")
+        return;
+    if (download_running)
+        if (confirm("Do you really want to cancel the list download?"))
+            window.location.reload();
+    document.getElementById("popup-container").remove();
 }
 function onClickDownloadBtn(event) {
     let download_opt = {};
@@ -64,11 +70,14 @@ function onClickDownloadBtn(event) {
     }
     
     let popup_window = document.getElementById("popup-window");
-    let input_elems = Array.from(popup_window.getElementsByTagName("input")).concat(Array.from(popup_window.getElementsByTagName("select"))); // TODO: disable buttons as well
-    input_elems.forEach( input_elem => fullDisableElem(input_elem));
+    let input_elems = getElementsByTagNames(["input", "select", "button"], popup_window);
+    input_elems = input_elems.filter(elem => elem != document.getElementById("cancel-btn"));
+    input_elems.forEach(input_elem => fullDisableElem(input_elem));
 
-    import(getInternalURL("../script/themes_downloader.js")).then((module) => { 
-        module.startDownload(window.location.href, download_opt);
+    import(getInternalURL("../script/themes_downloader.js")).then(async module => { 
+        download_running = true;
+        await module.startDownload(window.location.href, download_opt);
+        download_running = false;
     });
     event.target.textContent = "Downloading..."; //TODO: add loading wheel
 }
@@ -104,8 +113,8 @@ function calculateRangeEnd() {
     if (!table_anime)
         table_anime = document.getElementsByTagName("table").item(0);
     let rows = Array.from(table_anime.getElementsByTagName("tr"))
-    rows.forEach((row) => {
-        Array.from(row.getElementsByTagName("a")).filter((a) => a.href.endsWith(".webm")). // include only anchors with .webm at the end of their links
+    rows.forEach(row => {
+        Array.from(row.getElementsByTagName("a")).filter(a => a.href.endsWith(".webm")). // include only anchors with .webm at the end of their links
         forEach((a, index, arr) => {
             for (let i = index + 1; i < arr.length; i++) {
                 if (a.href == arr[i].href) {
@@ -129,6 +138,20 @@ function calculateRangeEnd() {
     range_end.max = count;
     range_end.value = count;
     max_range_end = count;
+}
+/**
+ * Gets all elements with the matching tag names similar to getElementsByTagName but for multiple tags.
+ * @param {String[]} qualifiedNames - Qualified name of each tag to be searched.
+ * @param {Element | Document} [scopeElement=document] - Element to search the tags in. Defaults to the whole document.
+ * @returns {Element[]} A array of all Element with the matching tag names.
+ */
+function getElementsByTagNames(qualifiedNames, scopeElement = document) {
+    if (!scopeElement)
+        scopeElement = document;
+    let arr = [];
+    qualifiedNames.forEach(qualifiedName =>
+        arr = arr.concat(Array.from(scopeElement.getElementsByTagName(qualifiedName))));
+    return arr;
 }
 /**
  * Disables a HTMLElement and removes the clickable class of itself or its parent element.

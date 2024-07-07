@@ -1,4 +1,4 @@
-var getInternalURL = (url) => chrome.runtime.getURL(url);
+var getInternalURL = url => chrome.runtime.getURL(url);
 
 var popup_container;
 var list_controls;
@@ -24,8 +24,8 @@ function waitForElem(selector) {
             return resolve(elem);
 
         const observer = new MutationObserver((mutations, obsv) => {
-            mutations.forEach((mutation) => {
-                mutation.addedNodes.forEach((node) => {
+            mutations.forEach(mutation => {
+                mutation.addedNodes.forEach(node => {
                     let queryNode;
                     if (node.nodeType == Node.ELEMENT_NODE)
                         queryNode = node.querySelector(selector);
@@ -51,7 +51,7 @@ async function loadDlPopup() {
 }
 function addDlPopup() {
     document.body.append(popup_container.cloneNode(true));
-    import(getInternalURL("../script/dl_popup.js")).then((module) => module.attachToPopup());
+    import(getInternalURL("../script/dl_popup.js")).then(module => module.attachToPopup());
 }
 function openDlPopup() {
     if (!popup_container)
