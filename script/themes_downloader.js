@@ -188,7 +188,7 @@ export async function startDownload(url, dl_opt) {
             /** @type {?VideoJsonObj | undefined} */
             let video_json;
             if (dl_opt.file_ext == "ogg" || dl_opt.embed_metadata) {
-                video_json = await getJSONobj(getAniThemesAPIVidURL(theme_url, dl_opt.file_ext, dl_opt.embed_metadata)); // TODO: account for rate limiting
+                video_json = await getJSONobj(getAniThemesAPIVidURL(theme_url, dl_opt.file_ext, dl_opt.embed_metadata));
                 if (!video_json) {
                     console.error("Error downloading " + anime.name + " " + theme.themeType + ": couldn't get theme data from animethemes.moe");
                     fail_count++;
@@ -252,53 +252,6 @@ export async function startDownload(url, dl_opt) {
 }
 
 /**
- * Counts the themes of a themes.moe list.
- * @param {string} url - URL of the themes.moe list to count the themes for.
- * @param {any} include_multiple_ver - Whether or not to include multiple versions of a opening.
- * @returns {Promise<number>} Count of themes with or without including multiple versions.
- */
-export async function getThemeCount(url, include_multiple_ver) {
-    if (!url.match(new RegExp("^https?://.+$", "i")))
-        throw new Error("url is not in an URL format: \"^https?://.+$\"")
-    if (!url.match(new RegExp("^https?://themes.moe/list/.+/.+$", "i")))
-        throw new Error("url is not an URL to a themes.moe list")
-
-    /** @type {ThemesMoeAnime[]} */
-    let list_json = await getJSONobj(getThemesMoeAPIListURL(url));
-
-    let song_count = 0;
-    
-    list_json.forEach(anime => {
-        anime.themes.forEach((theme, index, arr) => {
-            let unver_theme_type = "";
-            if (!include_multiple_ver){
-                let space_index = theme.themeType.indexOf(" ");
-                theme.themeType.substring(0, space_index != -1 ? space_index : undefined);
-                if (unver_theme_type == "")
-                    console.warn("themeType for version differentiating couldn't be detected. Count might include multiple versions.");
-            }
-            for (let i = index + 1; i < arr.length; i++) {
-                if (theme.mirror.mirrorURL == arr[i].mirror.mirrorURL) {
-                    arr.splice(i, 1);
-                    i--;
-                    continue;
-                }
-                if (!arr[i])
-                    debugger;
-                if (!include_multiple_ver) {
-                    if (arr[i].themeType.startsWith(unver_theme_type)) {
-                        arr.splice(i, 1);
-                        i--;
-                    }
-                }
-            }
-            song_count++;
-        })
-    });
-    return song_count;
-}
-
-/**
  * Embeds metadata of an AnimeTheme to file buffer. Writes title, artists, genre and comment.
  * @param {ArrayBuffer | Buffer} buffer - Buffer of the file. (only mp3 supported)
  * @param {AnimeThemeEntry[]} theme_entries - Array of theme_entries with the metadata being in the song attribute of a AnimeTheme.
@@ -325,7 +278,6 @@ function embed_theme_metadata(buffer, theme_entries, anime, theme, dl_opt) {
         anime.name + " " + (dl_opt.include_multiple_ver ? theme.themeType : theme.themeType.replace(new RegExp(" V\\d+$", "i"), "")) + "\n"
         + "downloaded from themes.moe with themes_downloader");
 }
-
 /**
  * Embeds metadata to mp3 buffer. Writes title, artists, genre and comment.
  * @param {ArrayBuffer | Buffer} buffer - Buffer of the mp3 file.
@@ -426,19 +378,66 @@ function getCombinedArtistString(artists){
  * @returns {Promise<any>} A matching object to json data returned by response.json().
  */
 async function getJSONobj(url) {
-    return fetch(url)
-        .then((response)=> response.json())
-        .then((responseJson)=> { return responseJson; });
+    for (let tries = 0; tries < 3; tries++) {
+        let resp = await fetch(url);
+        if (resp.status == 429) {
+            let retry_after = resp.headers.get("retry-after");
+            console.log(retry_after);
+            console.log(resp.headers);
+            let time_ms;
+            if (retry_after)
+                time_ms = getRetryAfterMs(retry_after);
+            else
+                time_ms = 20000;
+            console.warn("Too many requests on " + getAddressFromURL(url) + " waiting for " + time_ms + "ms");
+            await delay(time_ms);
+            continue;
+        }
+        return await resp.json();
+    }
+    throw Error("Download failed due to too many requests. Retry later");
+}
+/**
+ * Creates a promise that resolves after the set time.
+ * @param {number} time_ms - time in milliseconds.
+ * @returns {Promise} promise for awaiting.
+ */
+function delay(time_ms) {
+    return new Promise(resolve => setTimeout(resolve, time_ms))
+}
+/**
+ * Parses the "Retry-After" header supplied with HTTP error 429 for example.
+ * @param {!string} retryHeaderString - String provided as value for the "Retry-After" Header.
+ * @returns {number} The time indicated by the "Retry-After" Header in milliseconds.
+ */
+function getRetryAfterMs(retryHeaderString) {
+    let time_ms = Math.round(parseFloat(retryHeaderString) * 1000);
+    if (Number.isNaN(time_ms)) {
+      time_ms = Math.max(0, Date.parse(retryHeaderString) - Date.now());
+    }
+    return time_ms;
+}
+/**
+ * Removes protocol and path to retrieve the address of a http or https url.
+ * @param {!string} url - URL to extract the address off.
+ * @returns {string} the address of the URL.
+ */
+function getAddressFromURL(url) {
+    if (!url || typeof url != "string" || !url.match("^https?://"))
+        return "";
+    let addr_begin = url.indexOf("//") + 2
+    let slash_index = url.indexOf("/", addr_begin);
+    return url.substring(addr_begin, slash_index != -1 ? slash_index : undefined);
 }
 /**
  * Removes the path and if rm_file_ext is true the file extension to retrieve the name of the file and replaces dashes with spaces.
  * @param {!string} url - URL to extract the filename off.
  * @param {?boolean | undefined} rm_file_ext - Whether to or not remove the file extensions like ".txt" or ".pdf".
- * @returns {string | undefined} the filename or undefined if url is null or not a string.
+ * @returns {string} the filename with or without file extension.
  */
 function getFilenameFromURL(url, rm_file_ext){
     if (!url || typeof url != "string")
-        return undefined;
+        return "";
     let period_index = url.lastIndexOf(".");
     let filename = url.substring(url.lastIndexOf("/") + 1, rm_file_ext ? period_index != -1 ? period_index : undefined : undefined);
     return filename.replace(new RegExp("-", "g"), " ");
