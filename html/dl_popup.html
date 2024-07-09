@@ -13,18 +13,18 @@
                 <form id="download-form" action="">
                 <div class="row-box">
                     <div class="row-elem">
-                        <div class="clickable">
+                        <div class="clickable" title="Download audio only i.e. mp3 or ogg.">
                             <input id="rdio-audio" class="no-margin" name="mode" type="radio" value="" checked="checked"/><label for="rdio-audio" class="ltr-label">Audio (mp3/ogg)</label>
                         </div>
                     </div>
                     <div class="row-elem">
-                        <div class="clickable">
+                        <div class="clickable" title="Download video i.e. webm (mp4 not supported).">
                             <input id="rdio-video" class="no-margin" name="mode" type="radio"/><label for="rdio-video" class="ltr-label">Video (webm only)</label>
                         </div>
                     </div>
                 </div>
                 <div class="row-box">
-                    <div class="clickable row-elem">
+                    <div class="clickable" title="Write metadata of the actual song (only supported for mp3).">
                         <input id="chk-metadata" class="no-margin" name="metadata" type="checkbox"/><label for="chk-metadata" class="ltr-label">Write Metadata</label>
                     </div>
                 </div>
@@ -32,21 +32,21 @@
                     <select id="sel-ext" name="ext" class="clickable">
                     </select>
                 </div>
-                <div class="row-box">
+                <div class="row-box" title="If enabled includes all versions of a theme.">
                     <div class="clickable">
                         <input id="chk-mul-ver" name="mul-ver" class="no-margin" type="checkbox"/><label for="chk-mul-ver" class="ltr-label">Include multiple versions</label>
                     </div>
                 </div>
                 <div class="row-box">
-                    <div class="clickable">
+                    <div class="clickable" title="Limits the range to a set limit if enabled. Use this if Network or Memory restrictions make it impossible to download the whole list at once.">
                         <input id="chk-range" name="range" class="no-margin" type="checkbox"/><label for="chk-range" class="double-sided-label">Range:</label><input id="input-range-start" name="range-start" class="compact-input" type="number" min="1" value="1" disabled/><p class="spaced-inline">-</p><input id="input-range-end" name="range-end" class="compact-input" type="number" min="1" disabled/>
-                    </div><!--TODO: add title for further description-->
+                    </div>
                 </div>
                 </form>
             </div>
             <div class="div-seperator-line"></div>
             <div class="right-btn-box">
-                <button id="cancel-btn" class="ext-btn menu-elem cancel-btn">Cancel</button><button id="apply-btn" class="ext-btn menu-elem apply-btn">Download</button>
+                <button id="cancel-btn" class="ext-btn menu-elem cancel-btn">Cancel</button><button id="apply-btn" class="ext-btn menu-elem apply-btn" title="A Download might take a while. If you don't notice any progress check the console through F12.">Download</button>
             </div> 
         </div>
     </div>

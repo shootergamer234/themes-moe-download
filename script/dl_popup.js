@@ -77,6 +77,7 @@ function onClickDownloadBtn(event) {
 
     import(getInternalURL("../script/themes_downloader.js")).then(async module => { 
         download_running = true;
+        event.target.title = "";
         event.target.textContent = "Downloading";
         if (document.fonts.check("1em fa-solid-900")) {
             let loading_symbol = document.createElement("i");
@@ -103,6 +104,7 @@ function applyVideoMode() {
     while (sel_ext.firstChild)
         sel_ext.removeChild(sel_ext.firstChild);
     sel_ext.append(createSimpleOption("webm"));
+    sel_ext.title = "webm: The only video format offered by animethemes.moe. If a mp4 file is necessary use a converter like for example ffmpeg.";
 }
 function applyAudioMode() {
     fullEnableElem(document.getElementById("chk-metadata"));
@@ -113,6 +115,8 @@ function applyAudioMode() {
         sel_ext.removeChild(sel_ext.firstChild);
     sel_ext.append(createSimpleOption("mp3"));
     sel_ext.append(createSimpleOption("ogg"));
+    sel_ext.title = "mp3: The smalles audio file extension offered directly by themes.moe. Use this if you want metadata embedded as ID3v2.4.\n" + 
+        "ogg: slightly better quality but larger than mp3. Use this if you want the best sound quality and don't need metadata to be embedded";
 }
 function updateSelExt() {
     let sel_ext = document.getElementById("sel-ext");
