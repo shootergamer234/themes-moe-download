@@ -209,7 +209,7 @@ export async function startDownload(url, dl_opt) {
 
             // @ts-ignore
             JSZipUtils.getBinaryContent(theme_url, (/** @type {Error} */ error, /** @type {ArrayBuffer} */ data) => {
-                console.info((song_progress/song_count*100).toFixed(1)+"%" + " : downloading " + anime.name + " " + theme.themeType); // TODO: prettier loading screen
+                console.info((song_progress/song_count*100).toFixed(1)+"%" + " : downloading " + anime.name + " " + theme.themeType); // TODO: prettier loading screen: <i _ngcontent-rtg-c6="" class="fa fa-fw fa-spinner fa-pulse"></i>
                 if (error) {
                     fail_count++;
                     console.warn("Skipping metadata embedding: " + error.message);

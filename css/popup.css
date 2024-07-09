@@ -1,7 +1,3 @@
-body {
-    font-family: 'Roboto Condensed', sans-serif;
-}
-
 #popup-content {
     overflow-y: auto;
     padding: 0.5rem;
@@ -13,6 +9,7 @@ body {
 }
 
 #popup-window {
+    font-family: 'Roboto Condensed', sans-serif;
     transition: transform .3s ease-out; 
     margin: auto; 
     display: flex; 
