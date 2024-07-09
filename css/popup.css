@@ -123,15 +123,17 @@
 
 .ltr-label {
     padding: 0 0 0 5px;
+    margin: 0;
 }
 
 .rtl-label {
     padding: 0 5px 0 0;
+    margin: 0;
 }
 
 .double-sided-label {
-    margin: 0 5px 0 0;
     padding: 0 0 0 5px;
+    margin: 0 5px 0 0;
 }
 
 .compact-input {

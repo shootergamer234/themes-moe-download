@@ -1,13 +1,24 @@
 // @ts-check
 
+export const filter_type = {
+    watching: 1,
+    completed: 2,
+    on_hold: 3,
+    dropped: 4,
+    plan_to_watch: 6
+}
+
 /**
  * Options for the themes.moe list download.
  * @typedef {object} dl_opt
  * @property {string} [dl_opt.file_ext] - File extension of the downloaded files. Defaults to "mp3".
  * @property {boolean} [dl_opt.embed_metadata] - Whether or not to embed metadata. Defaults to false.
+ * @property {number[]} [dl_opt.filter] - Array of applicable themes.moe filter types. Defaults to all. An empty or filter type devoid array causes the method to return without downloading.
+ * @property {boolean} [dl_opt.include_op] - Whether or not to include openings. Defaults to true. If this and dl_opt.include_ed are false the method returns without downloading.
+ * @property {boolean} [dl_opt.include_ed] - Whether or not to include endings. Defaults to true. If this and dl_opt.include_op are false the method returns without downloading.
  * @property {boolean} [dl_opt.include_multiple_ver] - Whether or not to include multiple versions of a opening. Defaults to false.
- * @property {number} [dl_opt.range_start] - First item to download. Defaults to 1 representing the beginning of the list.
- * @property {number} [dl_opt.range_end] - Last item to download. Defaults to Infinity representing the end of the list.
+ * @property {number} [dl_opt.range_start] - First item to download. Defaults to 1 representing the beginning of the list if undefined or out of range.
+ * @property {number} [dl_opt.range_end] - Last item to download. Defaults to Infinity representing the end of the list if undefined or out of range.
  */
 /**
  * Anime object in the themes.moe API.
@@ -17,6 +28,7 @@
  * @property {number} year
  * @property {string} season
  * @property {Theme[]} themes
+ * @property {number} [watchStatus]
  */
 /**
  * Theme object in the themes.moe API.
@@ -84,15 +96,19 @@
  * @property {!string} name
  * @property {!string} slug
  */
+
 /**
  * Downloads themes.moe list in webm, ogg or mp3 format with or without metadata. (Metadata currently only supported for mp3)
  * @param {string} url - URL of the themes.moe list to download.
  * @param {?dl_opt} dl_opt - Options for the themes.moe list download.
  * @property {string} [dl_opt.file_ext] - File extension of the downloaded files. Defaults to "mp3".
  * @property {boolean} [dl_opt.embed_metadata] - Whether or not to embed metadata. Defaults to false.
+ * @property {number[]} [dl_opt.filter] - Array of applicable themes.moe filter types. Only works with MyAnimeList. Defaults to all. An empty or filter type devoid array causes the method to return without downloading.
+ * @property {boolean} [dl_opt.include_op] - Whether or not to include openings. Defaults to true. If this and dl_opt.include_ed are false the method returns without downloading.
+ * @property {boolean} [dl_opt.include_ed] - Whether or not to include endings. Defaults to true. If this and dl_opt.include_op are false the method returns without downloading.
  * @property {boolean} [dl_opt.include_multiple_ver] - Whether or not to include multiple versions of a opening. Defaults to false.
  * @property {number} [dl_opt.range_start] - First item to download. Defaults to 1 representing the beginning of the list if undefined or out of range.
- * @property {number} [dl_opt.range_end] - Last item to download. Defaults to Infinity representing the end of the list if undefined or out of range. // TODO: adjust for filters (not accounted for in json)
+ * @property {number} [dl_opt.range_end] - Last item to download. Defaults to Infinity representing the end of the list if undefined or out of range.
 */
 export async function startDownload(url, dl_opt) { 
     //#region normalizing parameters
@@ -114,18 +130,30 @@ export async function startDownload(url, dl_opt) {
     }
     if (dl_opt.file_ext != "mp3")
         dl_opt.embed_metadata = false; // embedding of everything else than mp3 not supported
+    if (!dl_opt.filter || !Array.isArray(dl_opt.filter))
+        dl_opt.filter = Object.values(filter_type);
+    else {
+        dl_opt.filter.filter((value) => typeof value == "number" && Object.values(filter_type).includes(value))
+        dl_opt.filter.sort();
+    }
+    if (!dl_opt.include_op || typeof dl_opt.include_op != "boolean")
+        dl_opt.include_op = true;
+    if (!dl_opt.include_ed || typeof dl_opt.include_ed != "boolean")
+        dl_opt.include_ed = true;
     if (!dl_opt.include_multiple_ver || typeof dl_opt.include_multiple_ver != "boolean")
         dl_opt.include_multiple_ver = false;
     if (!dl_opt.range_start || typeof dl_opt.range_start != "number" || dl_opt.range_start < 1)
         dl_opt.range_start = 1;
     if (!dl_opt.range_end || typeof dl_opt.range_end != "number")
         dl_opt.range_end = Infinity;
-    if (dl_opt.range_end < dl_opt.range_start){
+    if (dl_opt.range_end < dl_opt.range_start) {
         let temp = dl_opt.range_start;
         dl_opt.range_start = dl_opt.range_end;
         dl_opt.range_end = temp;
     }
     //#endregion
+    if (!dl_opt.include_op && !dl_opt.include_ed || dl_opt.filter.length == 0)
+        return; // nice nothing to do
     /** @type {ThemesMoeAnime[]} */
     let list_json = await getJSONobj(getThemesMoeAPIListURL(url));
     
@@ -178,7 +206,9 @@ export async function startDownload(url, dl_opt) {
             }
         }
     });
-
+    if (!isThemesMoePlaylist(url))
+        // @ts-ignore
+        list_json = list_json.filter((anime) => dl_opt.filter.includes(anime.watchStatus));
     if (dl_opt.range_end != Infinity)
         song_count = dl_opt.range_end - dl_opt.range_start + 1;
     
@@ -450,7 +480,7 @@ function getFilenameFromURL(url, rm_file_ext){
 function isThemesMoePlaylist(url) {
     if (!url || typeof url != "string")
         return false
-    return Boolean(url.match(new RegExp("https?://themes.moe/list/playlist")));
+    return Boolean(url.match(new RegExp("^https?://themes.moe/list/playlist")));
 }
 /**
  * Retrieves the name of a playlist from themes.moe.

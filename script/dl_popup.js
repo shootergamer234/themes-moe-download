@@ -1,7 +1,19 @@
 var max_range_end = 0;
 var download_running = false;
+/** @type {HTMLDivElement} */
+var filter_controls;
 
-export function attachToPopup() {
+/**
+ * Attaches the events and methods of the dl_popup.js to the dl_popup.
+ * @param {?HTMLElement} list_controls - The controls on the themes.moe list for filtering
+ */
+export function attachToPopup(list_controls) {
+    if (list_controls)
+        for (let elem of list_controls.getElementsByTagName("button"))
+            if (elem.textContent.match(new RegExp("^\\s*filters\\s*$", "i"))){
+                filter_controls = elem.nextElementSibling;
+                break;
+            }
     let rdio_audio = document.getElementById("rdio-audio");
     let rdio_video = document.getElementById("rdio-video");
     if (rdio_audio.checked)
@@ -32,9 +44,9 @@ export function attachToPopup() {
         }
     });
 
-    calculateRangeEnd();
-    let labels = Array.from(document.getElementById("popup-content").getElementsByTagName("label"));
-    labels.forEach(label => swapMarginPadding(label));
+    calculateRangeEnd(); // TODO: make range work from outside of themes.moe
+    /*let labels = Array.from(document.getElementById("popup-content").getElementsByTagName("label"));
+    labels.forEach(label => swapMarginPadding(label));*/
 }
 
 function closePopup(event) {
@@ -52,7 +64,8 @@ function onClickDownloadBtn(event) {
     download_opt.embed_metadata = document.getElementById("chk-metadata").checked;
     download_opt.file_ext = document.getElementById("sel-ext").value;
     download_opt.include_multiple_ver = document.getElementById("chk-mul-ver").checked;
-    let chk_range = document.getElementById("chk-range")
+    
+    let chk_range = document.getElementById("chk-range") // TODO: limit input of range to valid numbers
     if (chk_range.checked) {
         let range_start = document.getElementById("input-range-start");
         let start = parseInt(range_start.value, 10);
@@ -76,6 +89,16 @@ function onClickDownloadBtn(event) {
     input_elems.forEach(input_elem => fullDisableElem(input_elem));
 
     import(getInternalURL("../script/themes_downloader.js")).then(async module => { 
+        if (filter_controls) {
+            download_opt.filter = [];
+            if (isFilterApplied("Include Currently Watching")) download_opt.filter.push(module.filter_type.watching);
+            if (isFilterApplied("Include Completed")) download_opt.filter.push(module.filter_type.completed);
+            if (isFilterApplied("Include On-hold")) download_opt.filter.push(module.filter_type.on_hold);
+            if (isFilterApplied("Include Dropped")) download_opt.filter.push(module.filter_type.dropped);
+            if (isFilterApplied("Include PTW")) download_opt.filter.push(module.filter_type.plan_to_watch);
+            download_opt.include_op = isFilterApplied("Include OP")
+            download_opt.include_ed = isFilterApplied("Include ED")
+        }
         download_running = true;
         event.target.title = "";
         event.target.textContent = "Downloading";
@@ -86,7 +109,7 @@ function onClickDownloadBtn(event) {
         }
         else
             txt.textContent += "...";
-        await module.startDownload(window.location.href, download_opt);
+        await module.startDownload(window.location.href, download_opt); // modify this if you want to start the list download from your own website
         event.target.textContent = "Done";
         download_running = false;
         for (let i = 2; i > 0; i--) {
@@ -157,6 +180,19 @@ function calculateRangeEnd() {
     range_end.max = count;
     range_end.value = count;
     max_range_end = count;
+}
+/**
+ * Checks if a specific themes.moe list filter is applied
+ * @param {string} filter - Name of the filter. This is Case Sensitive.
+ * @returns {boolean} state of the searched filter or false if filter_controls wasn't assigned or the filter option doesn't exist.
+ */
+function isFilterApplied(filter) {
+    if (!filter_controls)
+        return false;
+    for (let elem of filter_controls.children)
+        if (elem.textContent.match(new RegExp("\\s*" + filter + "\\s*", "")))
+            return elem.children.item(0).className.includes("fa-check");
+    return false;
 }
 /**
  * Gets all elements with the matching tag names similar to getElementsByTagName but for multiple tags.

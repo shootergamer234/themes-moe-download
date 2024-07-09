@@ -1,6 +1,7 @@
 var getInternalURL = url => chrome.runtime.getURL(url);
 
 var popup_container;
+/** @type {HTMLDivElement} */
 var list_controls;
 
 document.body.style.border = "5px solid red"; //TODO: remove DEBUG indicator
@@ -51,7 +52,7 @@ async function loadDlPopup() {
 }
 function addDlPopup() {
     document.body.append(popup_container.cloneNode(true));
-    import(getInternalURL("../script/dl_popup.js")).then(module => module.attachToPopup());
+    import(getInternalURL("../script/dl_popup.js")).then(module => module.attachToPopup(list_controls)); // attaches the events and methods of the dl_popup.js to the imported dl_popup. list_controls is optional for filtering.
 }
 function openDlPopup() {
     if (!popup_container)
@@ -64,11 +65,10 @@ function openDlPopup() {
 }
 
 function addDlButton() {
-    let append_elem;
     if (list_controls.childElementCount == 1)
-        append_elem = list_controls.children.item(0); // append to the div containing the buttons
+        list_controls = list_controls.children.item(0); // append to the div containing the buttons
     else 
-        append_elem = list_controls; // fallback if thats not possible
+        list_controls = list_controls; // fallback if thats not possible
     let dl_btn = document.createElement("button"); // create download button
 
     if (document.fonts.check("1em fa-solid-900")) { // if fontawesome webfont is available use its symbols
@@ -78,7 +78,7 @@ function addDlButton() {
     }
     else // if not available fallback to text representation
         dl_btn.textContent = "DL";
-    let btn2 = append_elem.children.item(1)
+    let btn2 = list_controls.children.item(1)
     if (btn2) // style the button like the second on the control panel
         cloneAttributes(btn2, dl_btn);
     else { // if not possible revert to hardcoded style
@@ -88,12 +88,12 @@ function addDlButton() {
     }
 
     dl_btn.addEventListener("click", openDlPopup);
-    let create_pl_elem = append_elem.getElementsByClassName("float-right ml-auto").item(0); // find create playlist btn
+    let create_pl_elem = list_controls.getElementsByClassName("float-right ml-auto").item(0); // find create playlist btn
 
     if (create_pl_elem)
-        append_elem.insertBefore(dl_btn, create_pl_elem); // insert dl btn in before create plalist btn
+        list_controls.insertBefore(dl_btn, create_pl_elem); // insert dl btn in before create plalist btn
     else 
-        append_elem.append(dl_btn); // if not possible insert at the end of control panel
+        list_controls.append(dl_btn); // if not possible insert at the end of control panel
 }
 
 async function main() {
