@@ -87,12 +87,12 @@
 /**
  * Downloads themes.moe list in webm, ogg or mp3 format with or without metadata. (Metadata currently only supported for mp3)
  * @param {string} url - URL of the themes.moe list to download.
- * @param {dl_opt} dl_opt - Options for the themes.moe list download.
+ * @param {?dl_opt} dl_opt - Options for the themes.moe list download.
  * @property {string} [dl_opt.file_ext] - File extension of the downloaded files. Defaults to "mp3".
  * @property {boolean} [dl_opt.embed_metadata] - Whether or not to embed metadata. Defaults to false.
  * @property {boolean} [dl_opt.include_multiple_ver] - Whether or not to include multiple versions of a opening. Defaults to false.
  * @property {number} [dl_opt.range_start] - First item to download. Defaults to 1 representing the beginning of the list if undefined or out of range.
- * @property {number} [dl_opt.range_end] - Last item to download. Defaults to Infinity representing the end of the list if undefined or out of range.
+ * @property {number} [dl_opt.range_end] - Last item to download. Defaults to Infinity representing the end of the list if undefined or out of range. // TODO: adjust for filters (not accounted for in json)
 */
 export async function startDownload(url, dl_opt) { 
     //#region normalizing parameters

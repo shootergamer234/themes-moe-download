@@ -38,13 +38,14 @@ export function attachToPopup() {
 }
 
 function closePopup(event) {
-    if (event.currentTarget != event.explicitOriginalTarget || 
-        download_running && event.currentTarget.id == "popup-flexbox")
-        return;
-    if (download_running)
-        if (confirm("Do you really want to cancel the list download?"))
-            window.location.reload();
-    document.getElementById("popup-container").remove();
+    if (!event ||
+        event.currentTarget == event.explicitOriginalTarget && 
+        (!download_running || event.currentTarget.id != "popup-flexbox")) {
+        if (download_running)
+            if (confirm("Do you really want to cancel the list download?"))
+                window.location.reload();
+        document.getElementById("popup-container")?.remove();
+    }
 }
 function onClickDownloadBtn(event) {
     let download_opt = {};
@@ -76,10 +77,24 @@ function onClickDownloadBtn(event) {
 
     import(getInternalURL("../script/themes_downloader.js")).then(async module => { 
         download_running = true;
+        event.target.textContent = "Downloading";
+        if (document.fonts.check("1em fa-solid-900")) {
+            let loading_symbol = document.createElement("i");
+            loading_symbol.className = "fa fa-fw fa-spinner fa-pulse";
+            event.target.appendChild(loading_symbol);
+        }
+        else
+            txt.textContent += "...";
         await module.startDownload(window.location.href, download_opt);
+        event.target.textContent = "Done";
         download_running = false;
+        for (let i = 2; i > 0; i--) {
+            console.info("closing in " + i + " " + (i == 1 ? "second" : "seconds"))
+            await new Promise((res) => setTimeout(res, 1000));
+        }
+        console.info("closing...")
+        closePopup();
     });
-    event.target.textContent = "Downloading..."; //TODO: add loading wheel
 }
 function applyVideoMode() {
     fullDisableElem(document.getElementById("chk-metadata"));

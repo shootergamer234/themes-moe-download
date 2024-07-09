@@ -6,21 +6,6 @@ var list_controls;
 document.body.style.border = "5px solid red"; //TODO: remove DEBUG indicator
 
 /**
- * Checks if a stylesheet is included in the document.
- * @param {String} url - Regular Expression of the URL to the CSS to be searched.
- * @returns {boolean} whether or not the css is part of the document.
- */
-function docHasCSS(url) { // "https://use.fontawesome.com/releases/v5.8.1/css/all.css"
-    let arr = Array.from(document.styleSheets)
-    for (let i = 0; i < arr.length; i++) {
-        if (!arr[i].href)
-            continue;
-        if (arr[i].href.match(new RegExp(url, "i")))
-            return true;
-    }
-    return false;
-} 
-/**
  * Clones all attributes from one Node to another.
  * @param {Node} source - Node from which to copy all attributes.
  * @param {Node} target - Node that receives the same attributes.
@@ -86,7 +71,13 @@ function addDlButton() {
         append_elem = list_controls; // fallback if thats not possible
     let dl_btn = document.createElement("button"); // create download button
 
-    dl_btn.textContent = "DL"; //TODO: replace with img: <i _ngcontent-rtg-c6="" class="fa fa-fw filter-selection-mark fa-download"></i>
+    if (document.fonts.check("1em fa-solid-900")) { // if fontawesome webfont is available use its symbols
+        let dl_btn_symbol = document.createElement("i");
+        dl_btn_symbol.className = "fa fa-fw fa-download";
+        dl_btn.appendChild(dl_btn_symbol);
+    }
+    else // if not available fallback to text representation
+        dl_btn.textContent = "DL";
     let btn2 = append_elem.children.item(1)
     if (btn2) // style the button like the second on the control panel
         cloneAttributes(btn2, dl_btn);
