@@ -4,8 +4,6 @@ var popup_container;
 /** @type {HTMLDivElement} */
 var list_controls;
 
-document.body.style.border = "5px solid red"; //TODO: remove DEBUG indicator
-
 /**
  * Clones all attributes from one Node to another.
  * @param {Node} source - Node from which to copy all attributes.

@@ -29,9 +29,9 @@ export function attachToPopup(list_controls) {
     rdio_video.addEventListener("change", () => applyVideoMode());
     document.getElementById("sel-ext").addEventListener("change", () => updateSelExt());
     document.getElementById("chk-mul-ver").addEventListener("change", () => calculateRangeEnd());
+    let range_start = document.getElementById("input-range-start");
+    let range_end = document.getElementById("input-range-end");
     document.getElementById("chk-range").addEventListener("change", event => {
-        let range_start = document.getElementById("input-range-start");
-        let range_end = document.getElementById("input-range-end");
         if (event.target.checked) {
             range_start.disabled = false;
             range_end.disabled = false;
@@ -43,10 +43,10 @@ export function attachToPopup(list_controls) {
             range_end.value = max_range_end;
         }
     });
+    setInputFilter(range_start, value => /^([1-9]\d*)?$/.test(value));
+    setInputFilter(range_end, value => /^([1-9]\d*)?$/.test(value));
 
     calculateRangeEnd(); // TODO: make range work from outside of themes.moe
-    /*let labels = Array.from(document.getElementById("popup-content").getElementsByTagName("label"));
-    labels.forEach(label => swapMarginPadding(label));*/
 }
 
 function closePopup(event) {
@@ -65,7 +65,7 @@ function onClickDownloadBtn(event) {
     download_opt.file_ext = document.getElementById("sel-ext").value;
     download_opt.include_multiple_ver = document.getElementById("chk-mul-ver").checked;
     
-    let chk_range = document.getElementById("chk-range") // TODO: limit input of range to valid numbers
+    let chk_range = document.getElementById("chk-range")
     if (chk_range.checked) {
         let range_start = document.getElementById("input-range-start");
         let start = parseInt(range_start.value, 10);
@@ -193,6 +193,39 @@ function isFilterApplied(filter) {
         if (elem.textContent.match(new RegExp("\\s*" + filter + "\\s*", "")))
             return elem.children.item(0).className.includes("fa-check");
     return false;
+}
+/**
+ * @callback inputFilter
+ * @param {string} value - the new value trying to be set.
+ * @returns {boolean} If truthy the input is accepted.
+ */
+/**
+ * Applies a filter to a HTMLInputElement so only the requested inputs are accepted.
+ * @param {HTMLInputElement} textbox - Textbox that should only contain filtered values.
+ * @param {inputFilter} inputFilter - Callback function that applies the new value only if true is returned.
+ */
+function setInputFilter(textbox, inputFilter) {
+    ["input", "keydown", "keyup", "mousedown", "mouseup", "select", "contextmenu", "drop"].forEach(event => {
+        textbox.addEventListener(event, function () {
+            let selectionSupport = ["password", "search", "tel", "text", "url"].includes(this.type);
+            if (inputFilter(this.value) && (this.value.length == 0 ||
+                (!this.min || this.min && parseInt(this.value) >= parseInt(this.min)) &&
+                (!this.max || this.max && parseInt(this.value) <= parseInt(this.max)))) {
+                this.oldValue = this.value;
+                if (selectionSupport) {
+                    this.oldSelectionStart = this.selectionStart;
+                    this.oldSelectionEnd = this.selectionEnd;
+                }
+            }
+            else if (this.hasOwnProperty("oldValue")) {
+                this.value = this.oldValue;
+                if (selectionSupport)
+                    this.setSelectionRange(this.oldSelectionStart, this.oldSelectionEnd);
+            }
+            else
+                this.value = "";
+        });
+    });
 }
 /**
  * Gets all elements with the matching tag names similar to getElementsByTagName but for multiple tags.
