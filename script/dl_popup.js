@@ -2,6 +2,10 @@ var max_range_end = 0;
 var download_running = false;
 /** @type {HTMLDivElement} */
 var filter_controls;
+/** @type {HTMLDivElement} */
+var warning_box;
+/** @type {HTMLDivElement} */
+var warning_log;
 
 /**
  * Attaches the events and methods of the dl_popup.js to the dl_popup.
@@ -51,13 +55,19 @@ export function attachToPopup(list_controls) {
 
 function closePopup(event) {
     if (!event ||
-        event.currentTarget == event.explicitOriginalTarget && 
+        event.currentTarget == event.target &&
         (!download_running || event.currentTarget.id != "popup-flexbox")) {
         if (download_running)
             if (confirm("Do you really want to cancel the list download?"))
                 window.location.reload();
         document.getElementById("popup-container")?.remove();
     }
+}
+function closeHTMLLog(event) {
+    if (!event || 
+        warning_log && !warning_log.classList.contains("collapsed") && warning_box &&
+        !warning_log.contains(event.target) && event.target != warning_box)
+        hideHTMLLog();
 }
 function onClickDownloadBtn(event) {
     let download_opt = {};
@@ -88,6 +98,7 @@ function onClickDownloadBtn(event) {
     input_elems = input_elems.filter(elem => elem != document.getElementById("cancel-btn"));
     input_elems.forEach(input_elem => fullDisableElem(input_elem));
 
+    initHTMLLog();
     import(getInternalURL("../script/themes_downloader.js")).then(async module => { 
         if (filter_controls) {
             download_opt.filter = [];
@@ -111,13 +122,8 @@ function onClickDownloadBtn(event) {
             txt.textContent += "...";
         await module.startDownload(window.location.href, download_opt); // modify this if you want to start the list download from your own website
         event.target.textContent = "Done";
+        document.getElementById("cancel-btn").textContent = "Close";
         download_running = false;
-        for (let i = 2; i > 0; i--) {
-            console.info("closing in " + i + " " + (i == 1 ? "second" : "seconds"))
-            await new Promise((res) => setTimeout(res, 1000));
-        }
-        console.info("closing...")
-        closePopup();
     });
 }
 function applyVideoMode() {
@@ -299,4 +305,21 @@ function createSimpleOption(text) {
     opt.value = text;
     opt.text = text;
     return opt;
+}
+function initHTMLLog() {
+    warning_box = document.getElementById("warning-box");
+    warning_log = document.getElementById("warning-log");
+    
+    warning_box.addEventListener("click", () => showHTMLLog())
+    document.getElementById("popup-flexbox").addEventListener("click", event => closeHTMLLog(event));
+    warning_box.parentElement.hidden = false;
+}
+function showHTMLLog() {
+    warning_log.style.transform = "translateY(" + (-warning_box.offsetHeight) + "px)"; // TODO: Use precise method for translating or workaround
+    removeClass(warning_box.querySelector(".log-caret"), "log-caret-collapsed");
+    removeClass(warning_log, "collapsed");
+}
+function hideHTMLLog() {
+    appendClass(warning_box.querySelector(".log-caret"), "log-caret-collapsed");
+    appendClass(warning_log, "collapsed");
 }

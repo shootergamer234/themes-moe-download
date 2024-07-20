@@ -1,3 +1,6 @@
+* {
+    box-sizing: border-box;
+}
 #popup-content {
     overflow-y: auto;
     padding: 0.5rem;
@@ -70,6 +73,7 @@
     display: inline-block;
     font-weight: 400;
     text-align: center;
+    -webkit-user-select: none;
     user-select: none;
     border: 1px solid transparent;
     padding: .375rem .75rem;
@@ -119,6 +123,9 @@
 
 .row-elem {
     margin: 0 1rem 0 0;
+}
+.row-elem-end {
+    margin: 0;
 }
 
 .ltr-label {
@@ -182,29 +189,71 @@
     border-color: #28a745;
 }
 .clickable:not(div), .clickable>input[type="checkbox"], .clickable>input[type="radio"], .clickable>label {
+    -webkit-user-select: none;
     user-select: none;
+    cursor: pointer;
+}
+.clickable-div {
     cursor: pointer;
 }
 .log-caret {
     color: #939294;
     align-self: center;
+    transform: rotate(-90deg);
+    transition: transform .15s ease-out;
+    cursor: pointer;
 }
-.log-text {
+.log-caret-collapsed {
+    transform: rotate(0);
+}
+.log {
     margin: 0;
-    color: #d0a647;
+    padding-right: 10px;
     font-size: smaller;
-}/*
-.log-text::before {
-    display: inline-block;
-    margin-right: 5px;
-    /*vertical-align: .255em;
-    content: "";
-    border-top: .3em solid #939294;
-    border-right: .3em solid transparent;
-    border-bottom: 0;
-    border-left: .3em solid transparent;
-}*/
+    border-style: solid;
+    border-width: 1px;
+    width: 300px;
+    transition: background-color .2s ease-out;
+}
+.log-log {
+    color: #0c0c0d;
+    background-color: white;
+    border-color: #f2f2f4;
+}
+.log-info {
+    color: white;
+    background-color: black;
+    border-color: #0c0c0d;
+}
 .log-warning {
+    color: #886d23;
     background-color: #fffbd6; 
-    border: 1px solid #f4e899;
+    border-color: #f4e899;
+}
+.log-error {
+    color: #a4000f;
+    background-color: #fdf2f5;
+    border-color: #f8d5db;
+}
+.collapsed {
+    max-height: 0 !important;
+    overflow: hidden !important;
+    opacity: 0% !important;
+}
+.collapsable-container {
+    position: relative;
+}
+.collapsable {
+    opacity: 100%;
+    display: block;
+    position: absolute;
+    top: auto;
+    right: auto;
+    bottom: 0;
+    left: 0;
+    scrollbar-width: thin;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 300px;
+    transition: opacity .2s ease-out;
 }

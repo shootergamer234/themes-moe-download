@@ -111,6 +111,7 @@ export const filter_type = {
  * @property {number} [dl_opt.range_end] - Last item to download. Defaults to Infinity representing the end of the list if undefined or out of range.
 */
 export async function startDownload(url, dl_opt) { 
+    return;
     //#region normalizing parameters
     if (!url.match(new RegExp("^https?://.+$", "i")))
         throw new Error("url is not in an URL format: \"^https?://.+$\"")
@@ -179,9 +180,8 @@ export async function startDownload(url, dl_opt) {
                     continue;
                 }
                 if (!dl_opt.include_multiple_ver) {
-                    if (unver_theme_type == "") {
+                    if (unver_theme_type == "")
                         console.warn("themeType for version differentiating couldn't be detected. Final file might include multiple versions of " + anime.name + " " + theme.themeType);
-                    }
                     if (arr[i].themeType.startsWith(unver_theme_type)) {
                         arr.splice(i, 1);
                         i--;
@@ -239,7 +239,7 @@ export async function startDownload(url, dl_opt) {
 
             // @ts-ignore
             JSZipUtils.getBinaryContent(theme_url, (/** @type {Error} */ error, /** @type {ArrayBuffer} */ data) => {
-                console.info((song_progress/song_count*100).toFixed(1)+"%" + " : downloading " + anime.name + " " + theme.themeType); // TODO: prettier loading screen: <i _ngcontent-rtg-c6="" class="fa fa-fw fa-spinner fa-pulse"></i>
+                console.info((song_progress/song_count*100).toFixed(1)+"%" + " : downloading " + anime.name + " " + theme.themeType);
                 if (error) {
                     fail_count++;
                     console.warn("Skipping metadata embedding: " + error.message);

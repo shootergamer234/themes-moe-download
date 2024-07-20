@@ -18,7 +18,7 @@
                             <input id="rdio-audio" class="no-margin" name="mode" type="radio" value="" checked="checked"/><label for="rdio-audio" class="ltr-label">Audio (mp3/ogg)</label>
                         </div>
                     </div>
-                    <div class="row-elem">
+                    <div class="row-elem-end">
                         <div class="clickable" title="Download video i.e. webm (mp4 not supported).">
                             <input id="rdio-video" class="no-margin" name="mode" type="radio"/><label for="rdio-video" class="ltr-label">Video (webm only)</label>
                         </div>
@@ -44,12 +44,17 @@
                     </div>
                 </div>
                 </form>
-                <div style="max-height: 0; overflow: scroll;">Content</div>
-                <div class="log-warning row-box"><i class="log-caret fa fa-fw fa-caret-right"></i><p class="log-text">Some Warning</p></div>
+                <div hidden class="collapsable-container">
+                    <div id="warning-log" class="collapsable collapsed">
+                        <div class="log log-log row-box"><i class="fa fa-fw"></i>Nothing so far</div>
+                        <div class="log log-log row-box"><i class="fa fa-fw"></i>Errors and warnings will be shown here</div>
+                    </div>
+                    <div id="warning-box" class="log log-log row-box clickable-div"><i class="fa fa-fw fa-caret-right log-caret log-caret-collapsed"></i>Errors and warnings will be shown here</div>
+                </div>
             </div>
             <div class="div-seperator-line"></div>
             <div class="right-btn-box">
-                Not seeing all themes?<br>Adjust filters and try again.
+                Missing themes?<br>Adjust filters & retry
                 <button id="cancel-btn" class="ext-btn menu-elem cancel-btn">Cancel</button><button id="apply-btn" class="ext-btn menu-elem apply-btn" title="A Download might take a while. If you don't notice any progress check the console through F12.">Download</button>
             </div> 
         </div>

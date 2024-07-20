@@ -43,7 +43,7 @@
 
     "web_accessible_resources": [
         "script/dl_popup.js",
-        "script/downloader.js",
+        "script/themes_downloader.js",
         "html/dl_popup.html",
         "css/all.css",
         "webfonts/fa-solid-900.eot",
