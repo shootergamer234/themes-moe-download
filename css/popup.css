@@ -57,9 +57,20 @@
     line-height: 1.2;
 }
 
+.f-grow {
+    flex-grow: 1;
+}
+
+.f-right {
+    float: right;
+}
+
 .right-btn-box {
-    align-self: flex-end;
-    margin: .5rem 0;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    width: 100%;
+    padding: .5rem;
 }
 
 .div-seperator-line {
