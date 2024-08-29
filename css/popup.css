@@ -124,6 +124,7 @@
 .spaced-inline {
     margin: 5px;
     display: inline;
+    user-select: none;
 }
 
 .row-box {

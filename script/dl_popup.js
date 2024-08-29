@@ -264,10 +264,13 @@ function fullDisableElem(elem) {
  */
 function fullEnableElem(elem) {
     elem.disabled = false;
-    if (elem.tagName.toLowerCase() == "select")
-        appendClass(elem, "clickable");
+    if (elem.tagName.toLowerCase() == "select") {
+        if (!elem.classList.contains("clickable"))
+            appendClass(elem, "clickable");
+    }
     else
-        appendClass(elem.parentElement, "clickable");
+        if (!elem.parentElement.classList.contains("clickable"))
+            appendClass(elem.parentElement, "clickable");
 }
 /**
  * Removes one className from the classNames of the given HTMLElement.
