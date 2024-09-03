@@ -50,7 +50,7 @@ export function attachToPopup(list_controls) {
     setInputFilter(range_start, value => /^([1-9]\d*)?$/.test(value));
     setInputFilter(range_end, value => /^([1-9]\d*)?$/.test(value));
 
-    calculateRangeEnd(); // TODO: make range work from outside of themes.moe
+    calculateRangeEnd(); // TODO: make range work from outside of themes.moe?
 }
 
 function closePopup(event) {
@@ -62,12 +62,6 @@ function closePopup(event) {
                 window.location.reload();
         document.getElementById("popup-container")?.remove();
     }
-}
-function closeHTMLLog(event) {
-    if (!event || 
-        warning_log && !warning_log.classList.contains("collapsed") && warning_box &&
-        !warning_log.contains(event.target) && event.target != warning_box)
-        hideHTMLLog();
 }
 function onClickDownloadBtn(event) {
     let download_opt = {};
@@ -313,14 +307,20 @@ function initHTMLLog() {
     warning_box = document.getElementById("warning-box");
     warning_log = document.getElementById("warning-log");
     
-    warning_box.addEventListener("click", () => showHTMLLog())
-    document.getElementById("popup-flexbox").addEventListener("click", event => closeHTMLLog(event));
+    warning_box.addEventListener("click", () => showHTMLLog()) // TODO: Fix clickable area inconsistencies
+    document.getElementById("popup-window").addEventListener("click", event => closeHTMLLog(event));
     warning_box.parentElement.hidden = false;
 }
 function showHTMLLog() {
     warning_log.style.transform = "translateY(" + (-warning_box.offsetHeight) + "px)"; // TODO: Use precise method for translating or workaround
     removeClass(warning_box.querySelector(".log-caret"), "log-caret-collapsed");
     removeClass(warning_log, "collapsed");
+}
+function closeHTMLLog(event) {
+    if (!event || 
+        warning_log && !warning_log.classList.contains("collapsed") && warning_box &&
+        !warning_log.contains(event.target) && event.target != warning_box)
+        hideHTMLLog();
 }
 function hideHTMLLog() {
     appendClass(warning_box.querySelector(".log-caret"), "log-caret-collapsed");
