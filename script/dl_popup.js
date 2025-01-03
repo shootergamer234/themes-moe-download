@@ -307,21 +307,34 @@ function initHTMLLog() {
     warning_box = document.getElementById("warning-box");
     warning_log = document.getElementById("warning-log");
     
-    warning_box.addEventListener("click", () => showHTMLLog()) // TODO: Fix clickable area inconsistencies
-    document.getElementById("popup-window").addEventListener("click", event => closeHTMLLog(event));
+    warning_box.addEventListener("click", () => toggleHTLMLog()) // TODO: Fix clickable area inconsistencies
+    document.getElementById("popup-window").addEventListener("click", event => {
+        if (warning_box.contains(event.target))
+            return
+        hideHTMLLog()
+    });
     warning_box.parentElement.hidden = false;
+}
+function isHTMLLogCollapsed() { 
+    return warning_log.classList.contains("collapsed") 
+}
+function toggleHTLMLog() {
+    if (isHTMLLogCollapsed())
+        showHTMLLog()
+    else
+        hideHTMLLog()
 }
 function showHTMLLog() {
     warning_log.style.transform = "translateY(" + (-warning_box.offsetHeight) + "px)"; // TODO: Use precise method for translating or workaround
     removeClass(warning_box.querySelector(".log-caret"), "log-caret-collapsed");
     removeClass(warning_log, "collapsed");
 }
-function closeHTMLLog(event) {
-    if (!event || 
-        warning_log && !warning_log.classList.contains("collapsed") && warning_box &&
-        !warning_log.contains(event.target) && event.target != warning_box)
-        hideHTMLLog();
-}
+// function closeHTMLLog(event) {
+//     if (!event || 
+//         warning_log && !warning_log.classList.contains("collapsed") && warning_box &&
+//         !warning_log.contains(event.target) && event.target != warning_box)
+//         hideHTMLLog();
+// }
 function hideHTMLLog() {
     appendClass(warning_box.querySelector(".log-caret"), "log-caret-collapsed");
     appendClass(warning_log, "collapsed");
