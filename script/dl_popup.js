@@ -307,7 +307,7 @@ function initHTMLLog() {
     warning_box = document.getElementById("warning-box");
     warning_log = document.getElementById("warning-log");
     
-    warning_box.addEventListener("click", () => toggleHTLMLog()) // TODO: Fix clickable area inconsistencies
+    warning_box.addEventListener("click", () => toggleHTMLLog()) // TODO: Fix clickable area inconsistencies
     document.getElementById("popup-window").addEventListener("click", event => {
         if (warning_box.contains(event.target))
             return
@@ -318,7 +318,7 @@ function initHTMLLog() {
 function isHTMLLogCollapsed() { 
     return warning_log.classList.contains("collapsed") 
 }
-function toggleHTLMLog() {
+function toggleHTMLLog() {
     if (isHTMLLogCollapsed())
         showHTMLLog()
     else

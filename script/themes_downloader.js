@@ -8,6 +8,7 @@ export const filter_type = {
     plan_to_watch: 6
 }
 
+//#region ts types
 /**
  * Options for the themes.moe list download.
  * @typedef {object} dl_opt
@@ -50,7 +51,7 @@ export const filter_type = {
  * @property {Video} video
  */
 /**
- * Video object in the animethemes.moe API (not all Attrbutes included)
+ * Video object in the animethemes.moe API (not all Attributes included)
  * @typedef {object} Video
  * @property {!number} id
  * @property {!string} link
@@ -60,7 +61,7 @@ export const filter_type = {
  * @property {AnimeThemeEntry[]} [animethemeentries]
  */
 /**
- * Audio object in the animethemes.moe API (not all Attrbutes included)
+ * Audio object in the animethemes.moe API (not all Attributes included)
  * @typedef {object} Audio
  * @property {!number} id
  * @property {!string} filename
@@ -68,7 +69,7 @@ export const filter_type = {
  * @property {!string} [mimetype]
  */
 /**
- * Anime Theme Entry object in the animethemes.moe API (not all Attrbutes included)
+ * Anime Theme Entry object in the animethemes.moe API (not all Attributes included)
  * @typedef {object} AnimeThemeEntry
  * @property {!number} id
  * @property {?string} episodes
@@ -76,26 +77,27 @@ export const filter_type = {
  * @property {AnimeTheme} [animetheme]
  */
 /**
- * Anime Theme object in the animethemes.moe API (not all Attrbutes included)
+ * Anime Theme object in the animethemes.moe API (not all Attributes included)
  * @typedef {object} AnimeTheme
  * @property {!number} id
  * @property {!string} slug
  * @property {Song} [song]
  */
 /**
- * Song object in the animethemes.moe API (not all Attrbutes included)
+ * Song object in the animethemes.moe API (not all Attributes included)
  * @typedef {object} Song
  * @property {!number} id
  * @property {?string} title
  * @property {Artist[]} [artists]
  */
 /**
- * Artist object in the animethemes.moe API (not all Attrbutes included)
+ * Artist object in the animethemes.moe API (not all Attributes included)
  * @typedef {object} Artist
  * @property {!number} id
  * @property {!string} name
  * @property {!string} slug
  */
+//#endregion
 
 /**
  * Downloads themes.moe list in webm, ogg or mp3 format with or without metadata. (Metadata currently only supported for mp3)
@@ -297,7 +299,7 @@ function embed_theme_metadata(buffer, theme_entries, anime, theme, dl_opt) {
     if (theme_entries.length == 0)
         throw Error("theme_entries is empty");
     if (theme_entries.length > 1)
-        console.warn("multiple theme entries found applying first entry"); // TODO: better warnings: adjustable behaviour through callbacks?
+        console.warn("multiple theme entries found applying first entry"); // TODO: better warnings: adjustable behavior through callbacks?
     if (!theme_entries[0].animetheme)
         throw Error("animetheme is undefined");
     let song = theme_entries[0].animetheme.song;
@@ -314,7 +316,7 @@ function embed_theme_metadata(buffer, theme_entries, anime, theme, dl_opt) {
  * @param {?string | undefined} title - Title to be added as ID3v2 Tag.
  * @param {?Artist[] | undefined} artists - Artists to be added as ID3v2 Tag.
  * @param {?string | undefined} genre - Genre to be added as ID3v2 Tag.
- * @param {?string | undefined} description - Discription to be added as ID3v2 Tag. May conatain newlines.
+ * @param {?string | undefined} description - Description to be added as ID3v2 Tag. May contain newlines.
  * @returns {ArrayBuffer | Buffer} Buffer of the mp3 file embedded with metadata.
  * @throws Throws an error if embedding fails in MP3Tag.
  */
@@ -341,7 +343,7 @@ function embed_mp3_metadata(buffer, title, artists, genre, description) {
     return buffer;
 }
 /**
- * Find an equavalant mp3 link to a webm link.
+ * Find an equivalent mp3 link to a webm link.
  * @param {!string | !number} mal_id - MyAnimeList ID to the anime linked to the opening.
  * @param {!string} theme_type - Type of theme according to themes.moe.
  * @param {?string | undefined} url - URL in webm format to find an equivalent link to. Seems to be optional but is recommended.
@@ -371,7 +373,7 @@ function getThemesMoeAPIListURL(url) {
 /**
  * Transforms a animethemes.moe video URL into an API video URL with the matching resource inclusion.
  * @param {!string} url - URL to the webm video on animethemes.moe.
- * @param {?string | undefined} file_ext - File extentsion of the download. Includes "audio" if set to "ogg".
+ * @param {?string | undefined} file_ext - File extension of the download. Includes "audio" if set to "ogg".
  * @param {?boolean | undefined} embed_metadata - Whether or not to embed_metadata in the download. Includes "animethemeentries.animetheme.song.artists" for metadata if set to true.
  * @returns {string} URL to the API containing video data.
  */
@@ -473,7 +475,7 @@ function getFilenameFromURL(url, rm_file_ext){
     return filename.replace(new RegExp("-", "g"), " ");
 }
 /**
- * Check if the url is a themes.moe plalist url.
+ * Check if the url is a themes.moe playlist url.
  * @param {!string} url - URL to be checked.
  * @returns {boolean} Whether or not the url is a themes.moe playlist url.
  */

@@ -89,7 +89,7 @@ function addDlButton() {
     let create_pl_elem = list_controls.getElementsByClassName("float-right ml-auto").item(0); // find create playlist btn
 
     if (create_pl_elem)
-        list_controls.insertBefore(dl_btn, create_pl_elem); // insert dl btn in before create plalist btn
+        list_controls.insertBefore(dl_btn, create_pl_elem); // insert dl btn in before create playlist btn
     else 
         list_controls.append(dl_btn); // if not possible insert at the end of control panel
 }
