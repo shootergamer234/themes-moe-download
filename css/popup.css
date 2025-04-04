@@ -141,6 +141,11 @@
     margin: 0;
 }
 
+label {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
 .ltr-label {
     padding: 0 0 0 5px;
     margin: 0;
@@ -202,8 +207,6 @@
     border-color: #28a745;
 }
 .clickable:not(div), .clickable>input[type="checkbox"], .clickable>input[type="radio"], .clickable>label {
-    -webkit-user-select: none;
-    user-select: none;
     cursor: pointer;
 }
 .clickable-div {
@@ -225,7 +228,7 @@
     border-style: solid;
     border-width: 1px;
     width: 300px;
-    transition: background-color .2s ease-out;
+    transition: color .2s ease-out,border-color .2s ease-out , background-color .2s ease-out;
 }
 .log-log {
     color: #0c0c0d;
@@ -266,7 +269,7 @@
     scrollbar-width: thin;
     overflow-x: hidden;
     overflow-y: auto;
-    max-height: 300px;
+    max-height: 175px;
     transition: opacity .2s ease-out;
 }
 .log-text {
@@ -287,3 +290,20 @@
 .i-error {
     color: #d70022;
 }
+.no-text-select {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+/*.disabled {
+    pointer-events: none;
+}
+.disabled>input {
+    opacity: 0.5;
+}
+.disabled>button {
+    opacity: 0.65;
+}*/

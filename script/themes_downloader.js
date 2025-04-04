@@ -1,11 +1,21 @@
 // @ts-check
 
+var global_log_callback;
+
 export const filter_type = {
     watching: 1,
     completed: 2,
     on_hold: 3,
     dropped: 4,
     plan_to_watch: 6
+}
+
+export const verbosity_level = {
+    //critical: 0
+    error: 1,
+    warning: 2,
+    info: 3
+    //,debug: 4
 }
 
 //#region ts types
@@ -97,6 +107,11 @@ export const filter_type = {
  * @property {!string} name
  * @property {!string} slug
  */
+/**
+ * @callback LogCallback
+ * @param {string} text - the text to log.
+ * @param {number} verbosity - number indicating the verbosity. Verbosity levels can be found in the "verbosity_level" Object.
+ */
 //#endregion
 
 /**
@@ -111,9 +126,11 @@ export const filter_type = {
  * @property {boolean} [dl_opt.include_multiple_ver] - Whether or not to include multiple versions of a opening. Defaults to false.
  * @property {number} [dl_opt.range_start] - First item to download. Defaults to 1 representing the beginning of the list if undefined or out of range.
  * @property {number} [dl_opt.range_end] - Last item to download. Defaults to Infinity representing the end of the list if undefined or out of range.
+ * @param {?LogCallback} log_callback 
 */
-export async function startDownload(url, dl_opt) { 
-    return;
+export async function startDownload(url, dl_opt, log_callback) { 
+    if (log_callback)
+        global_log_callback = log_callback;
     //#region normalizing parameters
     if (!url.match(new RegExp("^https?://.+$", "i")))
         throw new Error("url is not in an URL format: \"^https?://.+$\"")
@@ -128,7 +145,7 @@ export async function startDownload(url, dl_opt) {
     else
         dl_opt.file_ext.toLowerCase();
     if (dl_opt.file_ext != "mp3" && dl_opt.file_ext != "ogg" && dl_opt.file_ext != "webm" ) {
-        console.warn(dl_opt.file_ext + "is not a supported file extension switching to mp3");
+        logOrDefault(dl_opt.file_ext + "is not a supported file extension switching to mp3", verbosity_level.warning);
         dl_opt.file_ext = "mp3";
     }
     if (dl_opt.file_ext != "mp3")
@@ -183,7 +200,7 @@ export async function startDownload(url, dl_opt) {
                 }
                 if (!dl_opt.include_multiple_ver) {
                     if (unver_theme_type == "")
-                        console.warn("themeType for version differentiating couldn't be detected. Final file might include multiple versions of " + anime.name + " " + theme.themeType);
+                        logOrDefault("themeType for version differentiating couldn't be detected. Final file might include multiple versions of " + anime.name + " " + theme.themeType, verbosity_level.warning);
                     if (arr[i].themeType.startsWith(unver_theme_type)) {
                         arr.splice(i, 1);
                         i--;
@@ -222,7 +239,7 @@ export async function startDownload(url, dl_opt) {
             if (dl_opt.file_ext == "ogg" || dl_opt.embed_metadata) {
                 video_json = await getJSONobj(getAniThemesAPIVidURL(theme_url, dl_opt.file_ext, dl_opt.embed_metadata));
                 if (!video_json) {
-                    console.error("Error downloading " + anime.name + " " + theme.themeType + ": couldn't get theme data from animethemes.moe");
+                    logOrDefault("Error downloading " + anime.name + " " + theme.themeType + ": couldn't get theme data from animethemes.moe", verbosity_level.error);
                     fail_count++;
                     return;
                 }
@@ -230,7 +247,7 @@ export async function startDownload(url, dl_opt) {
 
             if (video_json && dl_opt.file_ext == "ogg") {
                 if (!video_json.video.audio) {
-                    console.error("Error downloading " + anime.name + " " + theme.themeType + ": couldn't get audio link(ogg) from animethemes.moe");
+                    logOrDefault("Error downloading " + anime.name + " " + theme.themeType + ": couldn't get audio link(ogg) from animethemes.moe", verbosity_level.error);
                     fail_count++;
                     return;
                 }
@@ -241,10 +258,10 @@ export async function startDownload(url, dl_opt) {
 
             // @ts-ignore
             JSZipUtils.getBinaryContent(theme_url, (/** @type {Error} */ error, /** @type {ArrayBuffer} */ data) => {
-                console.info((song_progress/song_count*100).toFixed(1)+"%" + " : downloading " + anime.name + " " + theme.themeType);
+                logOrDefault((song_progress/song_count*100).toFixed(1)+"%" + " : downloading " + anime.name + " " + theme.themeType, verbosity_level.info);
                 if (error) {
                     fail_count++;
-                    console.warn("Skipping metadata embedding: " + error.message);
+                    logOrDefault("Skipping metadata embedding: " + error.message, verbosity_level.warning);
                 }
                 if (dl_opt.embed_metadata && dl_opt.file_ext == "mp3")
                     if (video_json && video_json.video.animethemeentries) {
@@ -253,17 +270,17 @@ export async function startDownload(url, dl_opt) {
                         }
                         catch (error) {
                             if (error.message == "theme_entries is empty")
-                                console.warn("Skipping metadata embedding: No Entry for " + anime.name + " ", theme.themeType + " found")
+                                logOrDefault("Skipping metadata embedding: No Entry for " + anime.name + " " + theme.themeType + " found", verbosity_level.warning)
                             else if (error.message == "animetheme is undefined")
-                                console.warn("Skipping metadata embedding: animetheme of " + anime.name + " ", theme.themeType + " were not included");
+                                logOrDefault("Skipping metadata embedding: animetheme of " + anime.name + " " + theme.themeType + " were not included", verbosity_level.warning);
                             else if (error.message.startsWith("MP3Tag: "))
-                                console.warn("Skipping metadata embedding: " + error.message);
+                                logOrDefault("Skipping metadata embedding: " + error.message, verbosity_level.warning);
                             else
                                 throw error;
                         }
                     }
                     else
-                        console.warn("Skipping metadata embedding: animethemeentries of " + anime.name + " ", theme.themeType + " were not included");
+                        logOrDefault("Skipping metadata embedding: animethemeentries of " + anime.name + " " + theme.themeType + " were not included", verbosity_level.warning);
                 
                 pl.file(
                     anime.name + " " + (dl_opt.include_multiple_ver ? theme.themeType : theme.themeType.replace(new RegExp(" V\\d+$", "i"), "")) + "." + dl_opt.file_ext, 
@@ -271,26 +288,48 @@ export async function startDownload(url, dl_opt) {
                 song_progress++
                 
                 if (song_count == song_progress+fail_count) {
-                    console.info("zipping...")
+                    logOrDefault("zipping...", verbosity_level.info)
                     // @ts-ignore
                     zip.generateAsync({type:"blob"}).then(content => saveAs(content, title ? title : "playlist"+".zip"));
-                    console.info("finished downloading " + title);
+                    logOrDefault("finished downloading " + title, verbosity_level.info);
                 }
             });
         });
     });
     if (fail_count > 0) 
-        console.warn(fail_count + " Downloads failed Zip might not contain all files");
+        logOrDefault(fail_count + " Downloads failed Zip might not contain all files", verbosity_level.warning);
+}
+
+/**
+ * Logs with the given logCallback if provided. Defaults to console logging if not provided.
+ * @param {string} text 
+ * @param {number} verbosity 
+ */
+function logOrDefault(text, verbosity) {
+    if (global_log_callback)
+        global_log_callback(text, verbosity)
+    else {
+        switch (verbosity) {
+            case verbosity_level.warning:
+                console.warn(text);
+                break;
+            case verbosity_level.error:
+                console.error(text);
+                break;
+            default:
+                console.info(text);
+        }
+    }
 }
 
 /**
  * Embeds metadata of an AnimeTheme to file buffer. Writes title, artists, genre and comment.
- * @param {ArrayBuffer | Buffer} buffer - Buffer of the file. (only mp3 supported)
+ * @param {ArrayBuffer} buffer - Buffer of the file. (only mp3 supported)
  * @param {AnimeThemeEntry[]} theme_entries - Array of theme_entries with the metadata being in the song attribute of a AnimeTheme.
  * @param {ThemesMoeAnime} anime - Anime object in the themes.moe API.
  * @param {Theme} theme - Theme object in the themes.moe API.
  * @param {dl_opt} dl_opt - Options for the themes.moe list download.
- * @returns {ArrayBuffer | Buffer} Buffer of the file embedded with metadata.
+ * @returns {ArrayBuffer} Buffer of the file embedded with metadata.
  * @throws Throws an error if theme_entries is invalid or embedding fails otherwise.
  */
 function embed_theme_metadata(buffer, theme_entries, anime, theme, dl_opt) {
@@ -299,7 +338,7 @@ function embed_theme_metadata(buffer, theme_entries, anime, theme, dl_opt) {
     if (theme_entries.length == 0)
         throw Error("theme_entries is empty");
     if (theme_entries.length > 1)
-        console.warn("multiple theme entries found applying first entry"); // TODO: better warnings: adjustable behavior through callbacks?
+        logOrDefault("multiple theme entries found applying first entry", verbosity_level.warning);
     if (!theme_entries[0].animetheme)
         throw Error("animetheme is undefined");
     let song = theme_entries[0].animetheme.song;
@@ -312,12 +351,12 @@ function embed_theme_metadata(buffer, theme_entries, anime, theme, dl_opt) {
 }
 /**
  * Embeds metadata to mp3 buffer. Writes title, artists, genre and comment.
- * @param {ArrayBuffer | Buffer} buffer - Buffer of the mp3 file.
+ * @param {ArrayBuffer} buffer - Buffer of the mp3 file.
  * @param {?string | undefined} title - Title to be added as ID3v2 Tag.
  * @param {?Artist[] | undefined} artists - Artists to be added as ID3v2 Tag.
  * @param {?string | undefined} genre - Genre to be added as ID3v2 Tag.
  * @param {?string | undefined} description - Description to be added as ID3v2 Tag. May contain newlines.
- * @returns {ArrayBuffer | Buffer} Buffer of the mp3 file embedded with metadata.
+ * @returns {ArrayBuffer} Buffer of the mp3 file embedded with metadata.
  * @throws Throws an error if embedding fails in MP3Tag.
  */
 function embed_mp3_metadata(buffer, title, artists, genre, description) {
@@ -414,14 +453,12 @@ async function getJSONobj(url) {
         let resp = await fetch(url);
         if (resp.status == 429) {
             let retry_after = resp.headers.get("retry-after");
-            console.log(retry_after);
-            console.log(resp.headers);
             let time_ms;
             if (retry_after)
                 time_ms = getRetryAfterMs(retry_after);
             else
                 time_ms = 20000;
-            console.warn("Too many requests on " + getAddressFromURL(url) + " waiting for " + time_ms + "ms");
+            logOrDefault("Too many requests on " + getAddressFromURL(url) + " waiting for " + time_ms + "ms", verbosity_level.warning);
             await delay(time_ms);
             continue;
         }

@@ -1,11 +1,14 @@
 var max_range_end = 0;
 var download_running = false;
+var html_log_first = true;
 /** @type {HTMLDivElement} */
 var filter_controls;
 /** @type {HTMLDivElement} */
-var warning_box;
-/** @type {HTMLDivElement} */
 var warning_log;
+/** @type {HTMLDivElement} */
+var warning_box;
+/** @type {HTMLParagraphElement} */
+var log_textbox;
 
 /**
  * Attaches the events and methods of the dl_popup.js to the dl_popup.
@@ -61,6 +64,7 @@ function closePopup(event) {
             if (confirm("Do you really want to cancel the list download?"))
                 window.location.reload();
         document.getElementById("popup-container")?.remove();
+        html_log_first = true;
     }
 }
 function onClickDownloadBtn(event) {
@@ -101,8 +105,8 @@ function onClickDownloadBtn(event) {
             if (isFilterApplied("Include On-hold")) download_opt.filter.push(module.filter_type.on_hold);
             if (isFilterApplied("Include Dropped")) download_opt.filter.push(module.filter_type.dropped);
             if (isFilterApplied("Include PTW")) download_opt.filter.push(module.filter_type.plan_to_watch);
-            download_opt.include_op = isFilterApplied("Include OP")
-            download_opt.include_ed = isFilterApplied("Include ED")
+            download_opt.include_op = isFilterApplied("Include OP");
+            download_opt.include_ed = isFilterApplied("Include ED");
         }
         download_running = true;
         event.target.title = "";
@@ -114,8 +118,8 @@ function onClickDownloadBtn(event) {
         }
         else
             txt.textContent += "...";
-        await module.startDownload(window.location.href, download_opt); // modify this if you want to start the list download from your own website
-        event.target.textContent = "Done";
+        await module.startDownload(window.location.href, download_opt, HTMLLog); // modify this if you want to start the list download from your own website
+        event.target.textContent = "Done"; //FIXME: shown when not done
         document.getElementById("cancel-btn").textContent = "Close";
         download_running = false;
     });
@@ -138,7 +142,7 @@ function applyAudioMode() {
         sel_ext.removeChild(sel_ext.firstChild);
     sel_ext.append(createSimpleOption("mp3"));
     sel_ext.append(createSimpleOption("ogg"));
-    sel_ext.title = "mp3: The smalles audio file extension offered directly by themes.moe. Use this if you want metadata embedded as ID3v2.4.\n" + 
+    sel_ext.title = "mp3: The smallest audio file extension offered directly by themes.moe. Use this if you want metadata embedded as ID3v2.4.\n" + 
         "ogg: slightly better quality but larger than mp3. Use this if you want the best sound quality and don't need metadata to be embedded";
 }
 function updateSelExt() {
@@ -247,6 +251,7 @@ function getElementsByTagNames(qualifiedNames, scopeElement = document) {
  */
 function fullDisableElem(elem) {
     elem.disabled = true;
+    //elem.classList.add("disabled");
     if (elem.tagName.toLowerCase() == "select")
         removeClass(elem, "clickable");
     else
@@ -258,6 +263,7 @@ function fullDisableElem(elem) {
  */
 function fullEnableElem(elem) {
     elem.disabled = false;
+    //elem.classList.remove("disabled");
     if (elem.tagName.toLowerCase() == "select") {
         if (!elem.classList.contains("clickable"))
             appendClass(elem, "clickable");
@@ -293,7 +299,7 @@ function swapMarginPadding(elem, v_window = document.defaultView) {
     elem.style.padding = temp_margin;
 }
 /**
- * Creates a option element with the text and value being the same.
+ * Creates an option element with the text and value being the same.
  * @param {string} text - Text and value of the option.
  * @returns {HTMLOptionElement} The option element with text and value set to the text parameter.
  */
@@ -306,17 +312,18 @@ function createSimpleOption(text) {
 function initHTMLLog() {
     warning_box = document.getElementById("warning-box");
     warning_log = document.getElementById("warning-log");
+    log_textbox = document.getElementById("log-textbox");
     
-    warning_box.addEventListener("click", () => toggleHTMLLog()) // TODO: Fix clickable area inconsistencies
+    warning_box.addEventListener("click", () => toggleHTMLLog()); // TODO: Fix clickable area inconsistencies
     document.getElementById("popup-window").addEventListener("click", event => {
-        if (warning_box.contains(event.target))
-            return
-        hideHTMLLog()
+        if (warning_box.contains(event.target) || warning_log.contains(event.target))
+            return;
+        hideHTMLLog();
     });
     warning_box.parentElement.hidden = false;
 }
 function isHTMLLogCollapsed() { 
-    return warning_log.classList.contains("collapsed") 
+    return warning_log.classList.contains("collapsed");
 }
 function toggleHTMLLog() {
     if (isHTMLLogCollapsed())
@@ -325,17 +332,65 @@ function toggleHTMLLog() {
         hideHTMLLog()
 }
 function showHTMLLog() {
+    warning_log.scroll(0, warning_log.scrollHeight);
     warning_log.style.transform = "translateY(" + (-warning_box.offsetHeight) + "px)"; // TODO: Use precise method for translating or workaround
     removeClass(warning_box.querySelector(".log-caret"), "log-caret-collapsed");
     removeClass(warning_log, "collapsed");
 }
-// function closeHTMLLog(event) {
-//     if (!event || 
-//         warning_log && !warning_log.classList.contains("collapsed") && warning_box &&
-//         !warning_log.contains(event.target) && event.target != warning_box)
-//         hideHTMLLog();
-// }
+/**
+ * Log to the HTMLLog
+ * @param {string} text
+ * @param {number} verbosity
+ */
+function HTMLLog(text, verbosity) {
+    if (html_log_first) {
+        clearHTMLLog();
+        html_log_first = false;
+    }
+    
+    log_textbox.textContent = text;
+    let div = document.createElement("div");
+    import(getInternalURL("../script/themes_downloader.js")).then(async module => {
+        switch (verbosity) {
+            case module.verbosity_level.info:
+                changeWarningBoxType("log-log");
+                /*div.className = "log log-log row-box"; //only show latest info; do not log info
+                div.innerHTML = '<i class="fa fa-fw fa-info-circle i-info"></i>' + text;
+                warning_log.appendChild(div);*/
+                console.info(text);
+                break;
+            case module.verbosity_level.warning:
+                changeWarningBoxType("log-warning");
+                div.className = "log log-warning row-box";
+                div.innerHTML = '<i class="fa fa-fw fa-exclamation-circle"></i>' + text;
+                warning_log.appendChild(div);
+                console.warn(text);
+                break;
+            case module.verbosity_level.error:
+                changeWarningBoxType("log-error");
+                div.className = "log log-error row-box";
+                div.innerHTML = '<i class="fa fa-fw fa-exclamation-triangle"></i>' + text;
+                warning_log.appendChild(div);
+                console.error(text);
+                break;
+        }
+    });
+}
+function clearHTMLLog() {
+    warning_log.innerHTML = "";
+    log_textbox.textContent = "";
+}
+/**
+ * Changes the type of warning of the warning box changing its design
+ * @param {string} newType 
+ */
+function changeWarningBoxType(newType) {
+    warning_box.classList.remove("log-log");
+    warning_box.classList.remove("log-warning");
+    warning_box.classList.remove("log-error");
+    warning_box.classList.add(newType);
+}
 function hideHTMLLog() {
-    appendClass(warning_box.querySelector(".log-caret"), "log-caret-collapsed");
-    appendClass(warning_log, "collapsed");
+    warning_box.querySelector(".log-caret").classList.add("log-caret-collapsed");
+    warning_log.classList.add("collapsed");
 }

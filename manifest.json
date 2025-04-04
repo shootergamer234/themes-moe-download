@@ -1,9 +1,9 @@
 {
     "manifest_version": 2,
-    "name": "themes.moe Download Button",
+    "name": "Themes.moe Download Button",
     "version": "0.0.1",
 
-    "description": "Adds a Download button to every themes.moe list and downloads them either as video or audio (mp3/ogg)",
+    "description": "Adds a Download button to every Themes.moe list and downloads them either as video or audio (mp3/ogg)",
 
     "icons" : {
         "48": "icon/icon_48.png",
