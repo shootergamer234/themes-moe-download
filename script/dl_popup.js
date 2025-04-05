@@ -4,6 +4,8 @@ var html_log_first = true;
 /** @type {HTMLDivElement} */
 var filter_controls;
 /** @type {HTMLDivElement} */
+var warning_back;
+/** @type {HTMLDivElement} */
 var warning_log;
 /** @type {HTMLDivElement} */
 var warning_box;
@@ -251,11 +253,10 @@ function getElementsByTagNames(qualifiedNames, scopeElement = document) {
  */
 function fullDisableElem(elem) {
     elem.disabled = true;
-    //elem.classList.add("disabled");
     if (elem.tagName.toLowerCase() == "select")
-        removeClass(elem, "clickable");
+        elem.classList.remove("clickable");
     else
-        removeClass(elem.parentElement, "clickable");
+        elem.parentElement.classList.remove("clickable");
 }
 /**
  * Enables a HTMLElement and appends the clickable class to itself or its parent element.
@@ -263,14 +264,12 @@ function fullDisableElem(elem) {
  */
 function fullEnableElem(elem) {
     elem.disabled = false;
-    //elem.classList.remove("disabled");
-    if (elem.tagName.toLowerCase() == "select") {
+    if (elem.tagName.toLowerCase() == "select")
         if (!elem.classList.contains("clickable"))
-            appendClass(elem, "clickable");
-    }
+            elem.classList.add("clickable");
     else
         if (!elem.parentElement.classList.contains("clickable"))
-            appendClass(elem.parentElement, "clickable");
+            elem.parentElement.classList.add("clickable");
 }
 /**
  * Removes one className from the classNames of the given HTMLElement.
@@ -310,13 +309,14 @@ function createSimpleOption(text) {
     return opt;
 }
 function initHTMLLog() {
+    warning_back = document.getElementById("warning-back");
     warning_box = document.getElementById("warning-box");
     warning_log = document.getElementById("warning-log");
     log_textbox = document.getElementById("log-textbox");
     
-    warning_box.addEventListener("click", () => toggleHTMLLog()); // TODO: Fix clickable area inconsistencies
+    warning_box.addEventListener("click", () => toggleHTMLLog());
     document.getElementById("popup-window").addEventListener("click", event => {
-        if (warning_box.contains(event.target) || warning_log.contains(event.target))
+        if (warning_log.contains(event.target) || warning_box.contains(event.target) || warning_back.contains(event.target))
             return;
         hideHTMLLog();
     });
@@ -334,8 +334,10 @@ function toggleHTMLLog() {
 function showHTMLLog() {
     warning_log.scroll(0, warning_log.scrollHeight);
     warning_log.style.transform = "translateY(" + (-warning_box.offsetHeight) + "px)"; // TODO: Use precise method for translating or workaround
-    removeClass(warning_box.querySelector(".log-caret"), "log-caret-collapsed");
-    removeClass(warning_log, "collapsed");
+    warning_back.style.transform = "translateY(" + (-warning_box.offsetHeight) + "px)";
+    warning_box.querySelector(".log-caret").classList.remove("log-caret-collapsed");
+    warning_log.classList.remove("collapsed");
+    warning_back.classList.remove("collapsed");
 }
 /**
  * Log to the HTMLLog
@@ -393,4 +395,5 @@ function changeWarningBoxType(newType) {
 function hideHTMLLog() {
     warning_box.querySelector(".log-caret").classList.add("log-caret-collapsed");
     warning_log.classList.add("collapsed");
+    warning_back.classList.add("collapsed");
 }

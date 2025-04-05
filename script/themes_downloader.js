@@ -129,6 +129,8 @@ export const verbosity_level = {
  * @param {?LogCallback} log_callback 
 */
 export async function startDownload(url, dl_opt, log_callback) { 
+    
+    return;
     if (log_callback)
         global_log_callback = log_callback;
     //#region normalizing parameters
