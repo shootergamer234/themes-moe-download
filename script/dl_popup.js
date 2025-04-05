@@ -110,6 +110,11 @@ function onClickDownloadBtn(event) {
             download_opt.include_op = isFilterApplied("Include OP");
             download_opt.include_ed = isFilterApplied("Include ED");
         }
+        let after_action = () => {
+            event.target.textContent = "Done";
+            document.getElementById("cancel-btn").textContent = "Close";
+            download_running = false;
+        }
         download_running = true;
         event.target.title = "";
         event.target.textContent = "Downloading";
@@ -120,10 +125,7 @@ function onClickDownloadBtn(event) {
         }
         else
             txt.textContent += "...";
-        await module.startDownload(window.location.href, download_opt, HTMLLog); // modify this if you want to start the list download from your own website
-        event.target.textContent = "Done"; //FIXME: shown when not done
-        document.getElementById("cancel-btn").textContent = "Close";
-        download_running = false;
+        await module.startDownload(window.location.href, download_opt, HTMLLog, after_action); // modify this if you want to start the list download from your own website
     });
 }
 function applyVideoMode() {
@@ -333,7 +335,7 @@ function toggleHTMLLog() {
 }
 function showHTMLLog() {
     warning_log.scroll(0, warning_log.scrollHeight);
-    warning_log.style.transform = "translateY(" + (-warning_box.offsetHeight) + "px)"; // TODO: Use precise method for translating or workaround
+    warning_log.style.transform = "translateY(" + (-warning_box.offsetHeight) + "px)";
     warning_back.style.transform = "translateY(" + (-warning_box.offsetHeight) + "px)";
     warning_box.querySelector(".log-caret").classList.remove("log-caret-collapsed");
     warning_log.classList.remove("collapsed");

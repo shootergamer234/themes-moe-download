@@ -127,10 +127,9 @@ export const verbosity_level = {
  * @property {number} [dl_opt.range_start] - First item to download. Defaults to 1 representing the beginning of the list if undefined or out of range.
  * @property {number} [dl_opt.range_end] - Last item to download. Defaults to Infinity representing the end of the list if undefined or out of range.
  * @param {?LogCallback} log_callback 
+ * @param {?Function} after_action 
 */
-export async function startDownload(url, dl_opt, log_callback) { 
-    
-    return;
+export async function startDownload(url, dl_opt, log_callback, after_action) { 
     if (log_callback)
         global_log_callback = log_callback;
     //#region normalizing parameters
@@ -294,6 +293,8 @@ export async function startDownload(url, dl_opt, log_callback) {
                     // @ts-ignore
                     zip.generateAsync({type:"blob"}).then(content => saveAs(content, title ? title : "playlist"+".zip"));
                     logOrDefault("finished downloading " + title, verbosity_level.info);
+                    if (after_action)
+                        after_action();
                 }
             });
         });
