@@ -353,31 +353,40 @@ function HTMLLog(text, verbosity) {
     }
     
     log_textbox.textContent = text;
-    let div = document.createElement("div");
+    
+    let divClassName, iClassName;
     import(getInternalURL("../script/themes_downloader.js")).then(async module => {
         switch (verbosity) {
             case module.verbosity_level.info:
                 changeWarningBoxType("log-log");
-                /*div.className = "log log-log row-box"; //only show latest info; do not log info
-                div.innerHTML = '<i class="fa fa-fw fa-info-circle i-info"></i>' + text;
-                warning_log.appendChild(div);*/
                 console.info(text);
                 break;
             case module.verbosity_level.warning:
                 changeWarningBoxType("log-warning");
-                div.className = "log log-warning row-box";
-                div.innerHTML = '<i class="fa fa-fw fa-exclamation-circle"></i>' + text;
-                warning_log.appendChild(div);
+                divClassName = "log log-warning row-box";
+                iClassName = "fa fa-fw fa-exclamation-circle";
                 console.warn(text);
                 break;
             case module.verbosity_level.error:
                 changeWarningBoxType("log-error");
-                div.className = "log log-error row-box";
-                div.innerHTML = '<i class="fa fa-fw fa-exclamation-triangle"></i>' + text;
-                warning_log.appendChild(div);
+                divClassName = "log log-error row-box";
+                iClassName = "fa fa-fw fa-exclamation-triangle";
                 console.error(text);
                 break;
         }
+        if (divClassName) {
+            let div = document.createElement("div");
+            div.className = divClassName;
+            let i = document.createElement("i");
+            i.className = iClassName;
+            div.appendChild(i);
+            let p = document.createElement("p");
+            p.classList.add("no-margin");
+            p.textContent = text;
+            div.appendChild(p);
+            warning_log.appendChild(div);
+        }
+
     });
 }
 function clearHTMLLog() {
